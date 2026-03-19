@@ -13,6 +13,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "test:e2e": "bash tests/e2e/test-full-flow.sh",
+    "test:docker": "bash tests/e2e/test-docker-startup.sh",
     "typecheck": "pnpm -r typecheck"
   },
   "engines": {

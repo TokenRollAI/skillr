@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { getEnv } from './env.js';
+import { autoMigrate, autoSeed } from './bootstrap.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { skillsRoutes } from './routes/skills.js';
@@ -35,12 +36,24 @@ app.notFound((c) => {
   return c.json({ error: 'Not found' }, 404);
 });
 
-// Start server
+// Bootstrap: auto-migrate + auto-seed, then start server
 const env = getEnv();
-console.log(`Starting Skillr Backend on port ${env.PORT}...`);
-serve({
-  fetch: app.fetch,
-  port: env.PORT,
-});
+
+async function start() {
+  console.log('Skillr Backend starting...');
+
+  try {
+    await autoMigrate();
+    await autoSeed();
+  } catch (err) {
+    console.error('Bootstrap failed:', err);
+    console.log('Starting server anyway (some features may not work)...');
+  }
+
+  serve({ fetch: app.fetch, port: env.PORT });
+  console.log(`Skillr Backend ready on port ${env.PORT}`);
+}
+
+start();
 
 export default app;

@@ -3,7 +3,12 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 FROM base AS builder
+# Copy full monorepo structure for pnpm workspace resolution
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/backend/package.json packages/backend/
+COPY packages/cli/package.json packages/cli/
+COPY packages/mcp/package.json packages/mcp/
 COPY packages/frontend/package.json packages/frontend/
 RUN pnpm install --frozen-lockfile
 COPY packages/frontend/ packages/frontend/
@@ -13,7 +18,6 @@ RUN pnpm --filter @skillr/frontend build
 FROM node:22-alpine AS runner
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
-# Next.js standalone copies the full monorepo structure
 COPY --from=builder /app/packages/frontend/.next/standalone ./
 COPY --from=builder /app/packages/frontend/.next/static ./packages/frontend/.next/static
 USER app

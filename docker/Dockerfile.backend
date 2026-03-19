@@ -12,7 +12,7 @@ COPY packages/backend/ packages/backend/
 RUN pnpm --filter @skillr/shared build
 RUN pnpm --filter @skillr/backend build
 
-# Production deps only
+# Production dependencies
 FROM base AS prod-deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/shared/package.json packages/shared/
@@ -25,6 +25,7 @@ RUN addgroup -S app && adduser -S app -G app
 RUN apk add --no-cache wget
 WORKDIR /app
 COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
+COPY --from=builder /app/packages/backend/drizzle ./packages/backend/drizzle
 COPY --from=builder /app/packages/backend/package.json ./packages/backend/
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/packages/shared ./packages/shared
