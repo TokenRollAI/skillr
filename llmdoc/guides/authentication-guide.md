@@ -2,10 +2,16 @@
 
 ## Login via CLI (Device Code Flow)
 
-1. **Initiate login:** Run the CLI login command. It calls `POST /api/auth/device/code` and displays a `user_code` and `verification_uri`. See `packages/cli/src/commands/auth.ts` (`loginFlow`).
-2. **Authorize in browser:** Open the `verification_uri` in a browser where you are already logged into the Skillhub web UI. Enter the displayed `user_code` on the `/device` page. The page sends `POST /api/auth/device/approve` with your existing browser JWT.
-3. **CLI receives token:** The CLI automatically polls the backend. Once approved, it receives a JWT (valid 7 days) and stores it in `~/.skillhub/config.json`. Polling handles `authorization_pending`, `slow_down` (adds 5s delay), `expired_token`, and `access_denied` responses.
-4. **Verify:** Run the `whoami` CLI command to confirm authentication status.
+1. **Initiate login:** Run `skillr login <server-url>` (e.g., `skillr login http://localhost:3001`). The URL is required -- there is no default source. This registers the server as a source and calls `POST /api/auth/device/code`, displaying a `user_code` and `verification_uri`. Alternatively, use `skillr auth login` if the source is already configured. See `packages/cli/src/commands/auth.ts` (`loginFlow`).
+2. **Multi-server login:** Run `skillr login` with different URLs to authenticate against multiple servers:
+   ```
+   skillr login http://localhost:3001
+   skillr login https://skills.company.com
+   ```
+   Tokens are stored per source URL in `~/.skillhub/config.json`.
+3. **Authorize in browser:** Open the `verification_uri` in a browser where you are already logged into the Skillhub web UI. Enter the displayed `user_code` on the `/device` page. The page sends `POST /api/auth/device/approve` with your existing browser JWT.
+4. **CLI receives token:** The CLI automatically polls the backend. Once approved, it receives a JWT (valid 7 days) and stores it in `~/.skillhub/config.json`. Polling handles `authorization_pending`, `slow_down` (adds 5s delay), `expired_token`, and `access_denied` responses.
+5. **Verify:** Run the `whoami` CLI command to confirm authentication status.
 
 ## Use Machine Tokens (CI/CD, MCP Server)
 

@@ -20,14 +20,22 @@ Detailed instructions for the AI agent...
 
 Validate locally with `skillhub scan` (runs `scanDirectory` -- no network required).
 
-## 2. Publish a Skill
+## 2. Publish a Skill (CLI)
 
-1. Authenticate: `skillhub auth login` (OAuth Device Code flow).
+1. Authenticate: `skillr login <server-url>` (OAuth Device Code flow).
 2. Navigate to the directory containing `SKILL.md`.
-3. Run: `skillhub push @my-namespace/my-deploy-helper` (or short: `skillhub push my-deploy-helper` to use `@default` namespace).
-4. Optionally specify a tag: `skillhub push @my-namespace/my-deploy-helper -t v1.0.0` (defaults to `latest`).
+3. Run: `skillr push @my-namespace/my-deploy-helper` (or short: `skillr push my-deploy-helper` to use `@default` namespace).
+4. Optionally specify a tag: `skillr push @my-namespace/my-deploy-helper -t v1.0.0` (defaults to `latest`).
 
 The CLI packs the directory into a `.tar.gz`, computes SHA256, and uploads via multipart POST to the registry. See `/llmdoc/architecture/skill-lifecycle.md` section 3b.
+
+## 2b. Web Publishing (Browser)
+
+For non-technical users or quick publishing without CLI:
+
+1. Open the Skillhub web UI and navigate to `/skills/publish`.
+2. Fill in skill metadata (name, namespace, description) and upload the skill files.
+3. Submit to publish directly from the browser.
 
 ## 3. Install a Skill
 

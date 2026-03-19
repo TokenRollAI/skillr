@@ -51,19 +51,25 @@ pnpm --filter @skillr/cli build
 ### CLI Usage
 
 ```bash
-# Authenticate
-skillr auth login
+# First-time setup: login to a server
+skillr login http://localhost:3001
+
+# Multi-server workflow
+skillr login http://localhost:3001          # Dev server
+skillr login https://skills.company.com     # Production server
+skillr source list                          # See all configured servers
+skillr source set-default production
 
 # Multi-source management
-skillr source list
 skillr source add internal https://skills.company.com
 
 # Scan local skills
 skillr scan ./my-skills/
 
-# Publish skill
+# Publish skill (CLI or Web)
 cd my-skill-dir/
 skillr push @default/my-skill -t v1.0.0
+# Or publish via browser: open http://localhost:3000/skills/publish
 
 # Search skills (supports fuzzy matching, no namespace required)
 skillr search "deploy"
@@ -83,9 +89,8 @@ skillr/
 ├── packages/
 │   ├── shared/       # Shared types and constants
 │   ├── cli/          # CLI tool (skillr)
-│   ├── backend/      # Hono API server
-│   ├── frontend/     # Next.js Web UI
-│   └── mcp/          # MCP Gateway (mcp-skillr)
+│   ├── backend/      # Hono API server (includes built-in MCP endpoint)
+│   └── frontend/     # Next.js Web UI
 ├── docker/
 │   ├── docker-compose.yml     # Local dev environment
 │   ├── Dockerfile.backend     # Backend production image
@@ -106,21 +111,17 @@ skillr/
 | Testing | Vitest |
 | Containers | Docker Compose |
 
-## MCP Gateway Configuration
+## MCP Integration
 
-Add the Skillr MCP Server to Claude Code:
+MCP is built into the backend server -- no separate process required. Add the Skillr MCP endpoint to your AI agent:
 
 ```json
 // ~/.claude/settings.json
 {
   "mcpServers": {
     "skillr": {
-      "command": "node",
-      "args": ["/path/to/skillr/packages/mcp/dist/index.js"],
-      "env": {
-        "SKILLHUB_BACKEND_URL": "http://localhost:3001",
-        "SKILLHUB_TOKEN": "your-token"
-      }
+      "type": "sse",
+      "url": "http://localhost:3001/mcp/sse"
     }
   }
 }

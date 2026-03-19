@@ -59,6 +59,17 @@
 - **Global roles** (`users.role`): `admin`, `viewer` (default). Stored in JWT payload, no DB query at check time.
 - **Namespace roles** (`ns_members.role`): `maintainer`, `viewer` (default). Queried from DB on each request by `requireNsRole`.
 
+### 3d-2. Namespace Visibility & Private Namespace Filtering
+
+Namespaces support a `visibility` field (`public` or `private`):
+
+- **Public namespaces:** Listed to all users (including anonymous). Skills within are searchable and downloadable by anyone.
+- **Private namespaces:** Filtered from listing and search results for users who are not members. Only namespace members (any role) and global admins can see private namespaces and their skills.
+- **Access control rules:**
+  1. `GET /api/namespaces` filters out private namespaces unless the requesting user is a member or admin.
+  2. Skill search (`GET /api/skills?q=...`) excludes skills in private namespaces from results for non-members.
+  3. Direct access to a private namespace's skills (`GET /api/skills/:ns/:name`) returns 404 for non-members (not 403, to avoid information leakage).
+
 ### 3e. Audit Logging
 
 - **Write:** `logAuditEvent()` in `packages/backend/src/services/audit.service.ts:5-15`. Direct INSERT, no async error protection.

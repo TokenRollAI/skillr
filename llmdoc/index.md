@@ -48,7 +48,7 @@ Skillhub is an enterprise-grade skill aggregation and distribution platform for 
 
 | Document | Description |
 |----------|-------------|
-| [api-endpoints.md](reference/api-endpoints.md) | All REST endpoints with method, path, auth requirements, request/response details. 4 route groups: health, auth, skills, namespaces. |
+| [api-endpoints.md](reference/api-endpoints.md) | All REST endpoints with method, path, auth requirements, request/response details. 6 route groups: health, auth, skills, namespaces, admin, mcp. |
 | [database-schema.md](reference/database-schema.md) | 7 PostgreSQL tables (users, namespaces, ns_members, skills, skill_tags, device_codes, audit_logs) with columns, types, constraints, indexes, and relationships. |
 | [coding-conventions.md](reference/coding-conventions.md) | TypeScript strict/ESM, pnpm workspaces, tsup/Next.js builds, Vitest testing, service-layer pattern, OutputAdapter, naming, error handling. |
 | [git-conventions.md](reference/git-conventions.md) | Single main branch, PR workflow, CI pipeline (typecheck, test, build, docker), pnpm 10 + Node 22. |

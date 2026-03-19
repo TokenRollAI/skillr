@@ -2,35 +2,52 @@
 
 All commands support `--json` flag for machine-readable output. Non-TTY environments auto-select JSON mode.
 
-## 1. Source Management
+## 1. First-Time Setup & Login
+
+No default source is configured. You must provide a server URL on first login.
+
+1. **First login:** `skillr login http://localhost:3001`
+   - This is a top-level shortcut for `skillr auth login`. It registers the server as a source and initiates the Device Code authentication flow.
+2. **Multi-server workflow:**
+   ```
+   skillr login http://localhost:3001          # Dev server
+   skillr login https://skills.company.com     # Production server
+   skillr source list                          # See all configured servers
+   skillr source set-default production
+   ```
+
+Reference: `packages/cli/src/commands/auth.ts` (`loginFlow`)
+
+## 2. Source Management
 
 Manage registry sources (local config only, no network calls).
 
-1. **List sources:** `skillhub source list`
-2. **Add a source:** `skillhub source add my-registry https://registry.example.com`
+1. **List sources:** `skillr source list`
+2. **Add a source:** `skillr source add my-registry https://registry.example.com`
    - URL must be http/https. Duplicate names or URLs are rejected.
-3. **Remove a source:** `skillhub source remove my-registry`
+3. **Remove a source:** `skillr source remove my-registry`
    - Cannot remove the last source. If removed source was default, `sources[0]` becomes default.
-4. **Set default:** `skillhub source set-default my-registry`
+4. **Set default:** `skillr source set-default my-registry`
 
 Reference: `packages/cli/src/commands/source.ts` (`registerSourceCommands`)
 
-## 2. Authentication Workflow
+## 3. Authentication Workflow
 
 Uses OAuth 2.0 Device Code flow. Tokens stored per source URL in `~/.skillhub/config.json`.
 
-1. **Login:** `skillhub auth login` (or `skillhub auth login -s my-registry`)
+1. **Login (top-level shortcut):** `skillr login <url>` -- adds source and authenticates in one step.
+2. **Login (via auth subcommand):** `skillr auth login` (or `skillr auth login -s my-registry`)
    - Displays a verification URL and user code. Open URL in browser, enter code.
-2. **Check identity:** `skillhub auth whoami` (or `-s <source>`)
-3. **View all auth status:** `skillhub auth status`
+3. **Check identity:** `skillr auth whoami` (or `-s <source>`)
+4. **View all auth status:** `skillr auth status`
    - Shows "Authenticated (env token)" if `SKILLHUB_TOKEN` env var is set.
-4. **Logout:** `skillhub auth logout` (or `-s <source>`)
+5. **Logout:** `skillr auth logout` (or `-s <source>`)
 
 Token priority: `SKILLHUB_TOKEN` env var > stored `config.auth[sourceUrl].token`.
 
 Reference: `packages/cli/src/commands/auth.ts` (`loginFlow`, `whoami`, `authStatus`)
 
-## 3. Skill Scanning
+## 4. Skill Scanning
 
 Discover and validate `SKILL.md` files in a directory tree.
 
@@ -41,7 +58,7 @@ Discover and validate `SKILL.md` files in a directory tree.
 
 Reference: `packages/cli/src/commands/scan.ts` (`scanDirectory`, `ScannedSkill`)
 
-## 4. Publishing a Skill
+## 5. Publishing a Skill
 
 Push a skill from CWD to the registry. Requires `SKILL.md` with valid frontmatter.
 
@@ -51,7 +68,7 @@ Push a skill from CWD to the registry. Requires `SKILL.md` with valid frontmatte
 
 Reference: `packages/cli/src/commands/push.ts` (`pushSkill`)
 
-## 5. Installing a Skill
+## 6. Installing a Skill
 
 Download, verify, cache, and symlink a skill.
 
@@ -64,7 +81,7 @@ Download, verify, cache, and symlink a skill.
 
 Reference: `packages/cli/src/commands/install.ts` (`installSkill`)
 
-## 6. Updating Installed Skills
+## 7. Updating Installed Skills
 
 Re-install all (or one) installed skills at `latest` tag.
 
@@ -73,7 +90,7 @@ Re-install all (or one) installed skills at `latest` tag.
 
 Reference: `packages/cli/src/commands/install.ts` (`updateSkills`)
 
-## 7. Searching the Registry
+## 8. Searching the Registry
 
 1. **Basic search:** `skillhub search "code review"`
 2. **Filter by namespace:** `skillhub search "lint" -n @myns`
@@ -82,7 +99,7 @@ Reference: `packages/cli/src/commands/install.ts` (`updateSkills`)
 
 Reference: `packages/cli/src/commands/search.ts` (`searchSkills`)
 
-## 8. JSON Output Mode for Agents
+## 9. JSON Output Mode for Agents
 
 For programmatic consumption by AI agents or scripts:
 
