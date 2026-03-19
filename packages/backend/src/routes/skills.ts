@@ -38,7 +38,18 @@ skillsRoutes.post('/:ns/:name', requireAuth, async (c) => {
   let readme: string | undefined;
   let metadata: Record<string, unknown> = {};
 
-  if (contentType.includes('multipart/form-data')) {
+  if (contentType.includes('application/json')) {
+    const body = await c.req.json() as {
+      description?: string;
+      readme: string;
+      metadata?: Record<string, unknown>;
+    };
+    if (!body.readme) return c.json({ error: 'Missing SKILL.md content' }, 400);
+    tarball = Buffer.from(body.readme, 'utf-8');
+    description = body.description;
+    readme = body.readme;
+    if (body.metadata) metadata = body.metadata;
+  } else if (contentType.includes('multipart/form-data')) {
     const formData = await c.req.formData();
     const file = formData.get('tarball') as File;
     if (!file) return c.json({ error: 'Missing tarball file' }, 400);
@@ -83,12 +94,33 @@ skillsRoutes.post('/:ns/:name', requireAuth, async (c) => {
   }
 });
 
+// Helper: extract optional userId from Authorization header
+async function extractOptionalUserId(c: any): Promise<string | undefined> {
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const { verifyJwt } = await import('../utils/jwt.js');
+      const payload = await verifyJwt(authHeader.slice(7));
+      return payload.sub;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 // Get skill info
 skillsRoutes.get('/:ns/:name', async (c) => {
   const ns = c.req.param('ns');
   const name = c.req.param('name');
   const result = await skillService.getSkill(ns, name);
   if (!result) return c.json({ error: 'Skill not found' }, 404);
+
+  // Check namespace visibility
+  const userId = await extractOptionalUserId(c);
+  const hasAccess = await skillService.checkNamespaceAccess(result.namespace.id, userId);
+  if (!hasAccess) return c.json({ error: 'Skill not found' }, 404);
+
   return c.json({
     name: result.skill.name,
     namespace: result.namespace.name,
@@ -107,6 +139,11 @@ skillsRoutes.get('/:ns/:name/tags', async (c) => {
   const name = c.req.param('name');
   const skill = await skillService.getSkill(ns, name);
   if (!skill) return c.json({ error: 'Skill not found' }, 404);
+
+  // Check namespace visibility
+  const userId = await extractOptionalUserId(c);
+  const hasAccess = await skillService.checkNamespaceAccess(skill.namespace.id, userId);
+  if (!hasAccess) return c.json({ error: 'Skill not found' }, 404);
 
   const tags = await skillService.getSkillTags(skill.skill.id);
   return c.json(tags.map(t => ({
@@ -142,12 +179,25 @@ skillsRoutes.get('/:ns/:name/tags/:tag', async (c) => {
 
 // Search skills
 skillsRoutes.get('/', async (c) => {
+  // Optional auth - extract user if present
+  let userId: string | undefined;
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const { verifyJwt } = await import('../utils/jwt.js');
+      const payload = await verifyJwt(authHeader.slice(7));
+      userId = payload.sub;
+    } catch {
+      // Token invalid, treat as unauthenticated
+    }
+  }
+
   const q = c.req.query('q') || '';
   const ns = c.req.query('namespace');
   const page = parseInt(c.req.query('page') || '1');
   const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100);
 
-  const results = await skillService.searchSkills(q, ns, page, limit);
+  const results = await skillService.searchSkills(q, ns, page, limit, userId);
   return c.json(results.map(r => ({
     name: r.skill.name,
     namespace: r.namespace.name,

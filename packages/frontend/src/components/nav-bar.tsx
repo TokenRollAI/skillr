@@ -47,6 +47,9 @@ export default function NavBar() {
           <a href="/skills" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
             Skills
           </a>
+          <a href="/skills/publish" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
+            Publish
+          </a>
           <a href="/namespaces" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
             Namespaces
           </a>

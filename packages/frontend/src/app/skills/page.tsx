@@ -18,15 +18,23 @@ export default async function SkillsPage({ searchParams }: { searchParams: Promi
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Skills</h1>
-        <form action="/skills" method="GET">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Search..."
-            className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm outline-none"
-          />
-        </form>
+        <div className="flex items-center gap-4">
+          <a
+            href="/skills/publish"
+            className="rounded-md bg-[var(--color-primary)] px-4 py-1.5 text-sm font-medium text-black hover:opacity-90"
+          >
+            Publish a Skill
+          </a>
+          <form action="/skills" method="GET">
+            <input
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="Search..."
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm outline-none"
+            />
+          </form>
+        </div>
       </div>
 
       {skills.length === 0 ? (

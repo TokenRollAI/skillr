@@ -25,10 +25,7 @@ describe('config', () => {
   describe('loadConfig', () => {
     it('should return default config when file does not exist', async () => {
       const config = await loadConfig(tempDir);
-      expect(config.sources).toHaveLength(1);
-      expect(config.sources[0]!.name).toBe('default');
-      expect(config.sources[0]!.url).toBe('https://hub.skillr.dev');
-      expect(config.sources[0]!.default).toBe(true);
+      expect(config.sources).toHaveLength(0);
       expect(config.auth).toEqual({});
       expect(config.telemetry).toBe(true);
     });
@@ -60,8 +57,7 @@ describe('config', () => {
 
       const config = await loadConfig(tempDir);
 
-      expect(config.sources).toHaveLength(1);
-      expect(config.sources[0]!.name).toBe('default');
+      expect(config.sources).toHaveLength(0);
       expect(stderrSpy).toHaveBeenCalledWith(
         expect.stringContaining('Warning'),
       );
@@ -90,7 +86,7 @@ describe('config', () => {
     it('should auto-create config directory', async () => {
       const nestedDir = join(tempDir, 'nested', 'dir');
       const config: SkillrConfig = {
-        sources: [{ name: 'default', url: 'https://hub.skillr.dev', default: true }],
+        sources: [{ name: 'default', url: 'http://localhost:3001', default: true }],
         auth: {},
         telemetry: true,
       };

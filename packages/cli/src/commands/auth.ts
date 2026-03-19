@@ -10,7 +10,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export async function loginFlow(
-  sourceName: string | undefined,
+  endpointOrSource: string | undefined,
   output: OutputAdapter,
   configDir?: string,
   sleepFn: (ms: number) => Promise<void> = sleep,
@@ -18,17 +18,40 @@ export async function loginFlow(
   const config = await loadConfig(configDir);
 
   let source;
-  if (sourceName) {
-    source = config.sources.find((s) => s.name === sourceName);
+
+  if (endpointOrSource && (endpointOrSource.startsWith('http://') || endpointOrSource.startsWith('https://'))) {
+    // User provided a URL — auto-add as a source if not already configured
+    const url = endpointOrSource.replace(/\/+$/, '');
+    source = config.sources.find((s) => s.url === url);
     if (!source) {
-      output.error(`Source "${sourceName}" not found.`);
+      // Derive a short name from the URL hostname
+      const hostname = new URL(url).hostname.replace(/\./g, '-');
+      const name = config.sources.length === 0 ? 'default' : hostname;
+      source = { name, url, default: config.sources.length === 0 };
+      config.sources.push(source);
+      await saveConfig(config, configDir);
+      output.info(`Added source "${name}" → ${url}`);
+    }
+  } else if (endpointOrSource) {
+    // User provided a source name
+    source = config.sources.find((s) => s.name === endpointOrSource);
+    if (!source) {
+      output.error(`Source "${endpointOrSource}" not found. Use a URL or an existing source name.`);
+      output.info('Usage: skillr login https://your-skillr-server.com');
       process.exitCode = 1;
       return;
     }
   } else {
+    // No argument — use default source
     source = getDefaultSource(config);
     if (!source) {
-      output.error('No sources configured. Add a source first with `skillr source add`.');
+      output.error('No sources configured yet.');
+      output.info('');
+      output.info('To get started, login with your Skillr server URL:');
+      output.info('  skillr login https://your-skillr-server.com');
+      output.info('');
+      output.info('For local development:');
+      output.info('  skillr login http://localhost:3001');
       process.exitCode = 1;
       return;
     }
@@ -114,28 +137,36 @@ export async function loginFlow(
   process.exitCode = 1;
 }
 
+function resolveSource(
+  config: SkillrConfig,
+  endpointOrName: string | undefined,
+): { source: import('@skillr/shared').SourceConfig | undefined; error?: string } {
+  if (endpointOrName && (endpointOrName.startsWith('http://') || endpointOrName.startsWith('https://'))) {
+    const url = endpointOrName.replace(/\/+$/, '');
+    const source = config.sources.find((s) => s.url === url);
+    if (!source) return { source: undefined, error: `No source configured for ${url}. Run \`skillr login ${url}\` first.` };
+    return { source };
+  }
+  if (endpointOrName) {
+    const source = config.sources.find((s) => s.name === endpointOrName);
+    if (!source) return { source: undefined, error: `Source "${endpointOrName}" not found.` };
+    return { source };
+  }
+  return { source: getDefaultSource(config) };
+}
+
 export async function logout(
-  sourceName: string | undefined,
+  endpointOrName: string | undefined,
   output: OutputAdapter,
   configDir?: string,
 ): Promise<void> {
   const config = await loadConfig(configDir);
+  const { source, error } = resolveSource(config, endpointOrName);
 
-  let source;
-  if (sourceName) {
-    source = config.sources.find((s) => s.name === sourceName);
-    if (!source) {
-      output.error(`Source "${sourceName}" not found.`);
-      process.exitCode = 1;
-      return;
-    }
-  } else {
-    source = getDefaultSource(config);
-    if (!source) {
-      output.error('No sources configured.');
-      process.exitCode = 1;
-      return;
-    }
+  if (error || !source) {
+    output.error(error || 'No sources configured.');
+    process.exitCode = 1;
+    return;
   }
 
   if (!config.auth[source.url]) {
@@ -149,32 +180,22 @@ export async function logout(
 }
 
 export async function whoami(
-  sourceName: string | undefined,
+  endpointOrName: string | undefined,
   output: OutputAdapter,
   configDir?: string,
 ): Promise<void> {
   const config = await loadConfig(configDir);
+  const { source, error } = resolveSource(config, endpointOrName);
 
-  let source;
-  if (sourceName) {
-    source = config.sources.find((s) => s.name === sourceName);
-    if (!source) {
-      output.error(`Source "${sourceName}" not found.`);
-      process.exitCode = 1;
-      return;
-    }
-  } else {
-    source = getDefaultSource(config);
-    if (!source) {
-      output.error('No sources configured.');
-      process.exitCode = 1;
-      return;
-    }
+  if (error || !source) {
+    output.error(error || 'No sources configured. Run `skillr login <url>` first.');
+    process.exitCode = 1;
+    return;
   }
 
   const token = getAuthToken(source.url, config);
   if (!token) {
-    output.error('Not logged in. Run `skillr auth login` first.');
+    output.error('Not logged in. Run `skillr login` first.');
     process.exitCode = 1;
     return;
   }
@@ -229,29 +250,29 @@ export function registerAuthCommands(program: Command): void {
 
   auth
     .command('login')
-    .description('Login to a skill registry (Device Code flow)')
-    .option('-s, --source <name>', 'Source name to authenticate with')
-    .action(async (opts: { source?: string }) => {
+    .description('Login to a skill registry')
+    .argument('[endpoint]', 'Server URL (e.g., https://skillr.company.com) or source name')
+    .action(async (endpoint?: string) => {
       const output = createOutput({ json: program.opts().json });
-      await loginFlow(opts.source, output);
+      await loginFlow(endpoint, output);
     });
 
   auth
     .command('logout')
     .description('Logout from a skill registry')
-    .option('-s, --source <name>', 'Source name to logout from')
-    .action(async (opts: { source?: string }) => {
+    .argument('[endpoint]', 'Server URL or source name')
+    .action(async (endpoint?: string) => {
       const output = createOutput({ json: program.opts().json });
-      await logout(opts.source, output);
+      await logout(endpoint, output);
     });
 
   auth
     .command('whoami')
     .description('Show current authenticated user')
-    .option('-s, --source <name>', 'Source name')
-    .action(async (opts: { source?: string }) => {
+    .argument('[endpoint]', 'Server URL or source name')
+    .action(async (endpoint?: string) => {
       const output = createOutput({ json: program.opts().json });
-      await whoami(opts.source, output);
+      await whoami(endpoint, output);
     });
 
   auth

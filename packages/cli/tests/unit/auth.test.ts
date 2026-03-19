@@ -15,7 +15,7 @@ describe('auth commands', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   const baseConfig: SkillrConfig = {
-    sources: [{ name: 'default', url: 'https://hub.skillr.dev', default: true }],
+    sources: [{ name: 'default', url: 'http://localhost:3001', default: true }],
     auth: {},
     telemetry: true,
   };
@@ -63,7 +63,7 @@ describe('auth commands', () => {
           body: {
             device_code: 'dc-123',
             user_code: 'ABCD-1234',
-            verification_uri: 'https://hub.skillr.dev/device',
+            verification_uri: 'http://localhost:3001/device',
             expires_in: 900,
             interval: 5,
           },
@@ -78,7 +78,7 @@ describe('auth commands', () => {
 
       expect(process.exitCode).toBeUndefined();
       const config = await loadConfig(tempDir);
-      expect(config.auth['https://hub.skillr.dev']?.token).toBe('token-abc');
+      expect(config.auth['http://localhost:3001']?.token).toBe('token-abc');
     });
 
     it('should handle network errors gracefully', async () => {
@@ -99,7 +99,7 @@ describe('auth commands', () => {
       const configWithAuth: SkillrConfig = {
         ...baseConfig,
         auth: {
-          'https://hub.skillr.dev': { token: 'test-token', type: 'device_code' },
+          'http://localhost:3001': { token: 'test-token', type: 'device_code' },
         },
       };
       await saveConfig(configWithAuth, tempDir);
@@ -108,7 +108,7 @@ describe('auth commands', () => {
       expect(process.exitCode).toBeUndefined();
 
       const config = await loadConfig(tempDir);
-      expect(config.auth['https://hub.skillr.dev']).toBeUndefined();
+      expect(config.auth['http://localhost:3001']).toBeUndefined();
     });
 
     it('should warn when not logged in', async () => {
@@ -125,7 +125,7 @@ describe('auth commands', () => {
       const configWithAuth: SkillrConfig = {
         ...baseConfig,
         auth: {
-          'https://hub.skillr.dev': { token: 'test-token', type: 'device_code' },
+          'http://localhost:3001': { token: 'test-token', type: 'device_code' },
         },
       };
       await saveConfig(configWithAuth, tempDir);

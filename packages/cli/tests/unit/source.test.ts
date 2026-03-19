@@ -39,13 +39,12 @@ describe('source commands', () => {
   });
 
   describe('listSources', () => {
-    it('should list default initial source', async () => {
+    it('should list empty sources on fresh config', async () => {
       await listSources(output, tempDir);
       expect(consoleSpy).toHaveBeenCalled();
       const parsed = JSON.parse(consoleSpy.mock.calls[0]![0] as string);
       expect(parsed.type).toBe('table');
-      expect(parsed.data).toHaveLength(1);
-      expect(parsed.data[0].Name).toBe('default');
+      expect(parsed.data).toHaveLength(0);
     });
   });
 
@@ -55,8 +54,8 @@ describe('source commands', () => {
       expect(process.exitCode).toBeUndefined();
 
       const config = await loadConfig(tempDir);
-      expect(config.sources).toHaveLength(2);
-      expect(config.sources[1]!.name).toBe('test');
+      expect(config.sources).toHaveLength(1);
+      expect(config.sources[0]!.name).toBe('test');
     });
 
     it('should reject invalid URL', async () => {
@@ -85,21 +84,24 @@ describe('source commands', () => {
 
   describe('removeSource', () => {
     it('should successfully remove a source', async () => {
-      await addSource('test', 'https://test.example.com', output, tempDir);
+      await addSource('first', 'https://first.example.com', output, tempDir);
+      await addSource('second', 'https://second.example.com', output, tempDir);
       process.exitCode = undefined;
       vi.clearAllMocks();
       consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      await removeSource('test', output, tempDir);
+      await removeSource('second', output, tempDir);
       expect(process.exitCode).toBeUndefined();
 
       const config = await loadConfig(tempDir);
       expect(config.sources).toHaveLength(1);
-      expect(config.sources[0]!.name).toBe('default');
+      expect(config.sources[0]!.name).toBe('first');
     });
 
     it('should refuse to remove the last source', async () => {
-      await removeSource('default', output, tempDir);
+      await addSource('only', 'https://only.example.com', output, tempDir);
+      process.exitCode = undefined;
+      await removeSource('only', output, tempDir);
       expect(process.exitCode).toBe(1);
     });
 
@@ -111,19 +113,20 @@ describe('source commands', () => {
 
   describe('setDefaultSource', () => {
     it('should successfully set default source', async () => {
-      await addSource('test', 'https://test.example.com', output, tempDir);
+      await addSource('first', 'https://first.example.com', output, tempDir);
+      await addSource('second', 'https://second.example.com', output, tempDir);
       process.exitCode = undefined;
       vi.clearAllMocks();
       consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      await setDefaultSource('test', output, tempDir);
+      await setDefaultSource('second', output, tempDir);
       expect(process.exitCode).toBeUndefined();
 
       const config = await loadConfig(tempDir);
-      const testSource = config.sources.find((s) => s.name === 'test');
-      expect(testSource?.default).toBe(true);
-      const defaultSource = config.sources.find((s) => s.name === 'default');
-      expect(defaultSource?.default).toBe(false);
+      const secondSource = config.sources.find((s) => s.name === 'second');
+      expect(secondSource?.default).toBe(true);
+      const firstSource = config.sources.find((s) => s.name === 'first');
+      expect(firstSource?.default).toBe(false);
     });
 
     it('should error on non-existent name', async () => {

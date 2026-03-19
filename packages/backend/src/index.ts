@@ -10,6 +10,7 @@ import { skillsRoutes } from './routes/skills.js';
 import { namespaceRoutes } from './routes/namespaces.js';
 import { apikeyRoutes } from './routes/apikeys.js';
 import { adminRoutes } from './routes/admin.js';
+import { mcpRoutes } from './routes/mcp.js';
 
 const app = new Hono();
 
@@ -30,6 +31,7 @@ app.route('/api/skills', skillsRoutes);
 app.route('/api/namespaces', namespaceRoutes);
 app.route('/api/auth/apikeys', apikeyRoutes);
 app.route('/api/admin', adminRoutes);
+app.route('/mcp', mcpRoutes);
 
 // 404
 app.notFound((c) => {

@@ -1,7 +1,7 @@
-import { eq, and, ilike, or, desc, sql } from 'drizzle-orm';
+import { eq, and, ilike, or, desc, sql, inArray } from 'drizzle-orm';
 import { getDb } from '../db.js';
 import { skills, skillTags } from '../models/schema.js';
-import { namespaces } from '../models/schema.js';
+import { namespaces, nsMembers } from '../models/schema.js';
 import { uploadArtifact, getSignedDownloadUrl, deleteArtifact } from './storage.service.js';
 
 export async function createOrUpdateSkill(
@@ -107,11 +107,55 @@ export async function getSkillTag(skillId: string, tag: string) {
   return { ...result, downloadUrl };
 }
 
-export async function searchSkills(query: string, namespace?: string, page = 1, limit = 20) {
+export async function getAccessibleNamespaceIds(userId?: string): Promise<string[]> {
+  const db = getDb();
+
+  if (!userId) {
+    // Unauthenticated: only public namespaces
+    const publicNs = await db.select({ id: namespaces.id }).from(namespaces)
+      .where(eq(namespaces.visibility, 'public'));
+    return publicNs.map(n => n.id);
+  }
+
+  // Authenticated: public + internal namespaces
+  const openNs = await db.select({ id: namespaces.id }).from(namespaces)
+    .where(or(eq(namespaces.visibility, 'public'), eq(namespaces.visibility, 'internal')));
+
+  // Private namespaces where user is a member
+  const privateNs = await db.select({ id: nsMembers.namespaceId }).from(nsMembers)
+    .innerJoin(namespaces, eq(nsMembers.namespaceId, namespaces.id))
+    .where(and(eq(nsMembers.userId, userId), eq(namespaces.visibility, 'private')));
+
+  return [...openNs.map(n => n.id), ...privateNs.map(n => n.id)];
+}
+
+export async function checkNamespaceAccess(namespaceId: string, userId?: string): Promise<boolean> {
+  const db = getDb();
+  const [ns] = await db.select().from(namespaces).where(eq(namespaces.id, namespaceId)).limit(1);
+  if (!ns) return false;
+
+  if (ns.visibility === 'public') return true;
+  if (ns.visibility === 'internal' && userId) return true;
+  if (ns.visibility === 'private' && userId) {
+    const [membership] = await db.select().from(nsMembers)
+      .where(and(eq(nsMembers.userId, userId), eq(nsMembers.namespaceId, namespaceId)))
+      .limit(1);
+    return !!membership;
+  }
+  return false;
+}
+
+export async function searchSkills(query: string, namespace?: string, page = 1, limit = 20, userId?: string) {
   const db = getDb();
   const offset = (page - 1) * limit;
 
+  // Filter by namespace visibility
+  const accessibleIds = await getAccessibleNamespaceIds(userId);
+  if (accessibleIds.length === 0) return [];
+
   const conditions = [];
+  conditions.push(inArray(skills.namespaceId, accessibleIds));
+
   if (query) {
     conditions.push(
       or(
@@ -140,8 +184,8 @@ export async function searchSkills(query: string, namespace?: string, page = 1, 
   return results;
 }
 
-export async function listSkills(page = 1, limit = 20, namespace?: string) {
-  return searchSkills('', namespace, page, limit);
+export async function listSkills(page = 1, limit = 20, namespace?: string, userId?: string) {
+  return searchSkills('', namespace, page, limit, userId);
 }
 
 export async function deleteSkill(namespaceName: string, skillName: string) {

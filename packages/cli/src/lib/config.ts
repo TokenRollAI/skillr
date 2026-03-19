@@ -25,13 +25,7 @@ export function getConfigPath(configDir?: string): string {
 
 export function getDefaultConfig(): SkillrConfig {
   return {
-    sources: [
-      {
-        name: DEFAULT_SOURCE_NAME,
-        url: DEFAULT_SOURCE_URL,
-        default: true,
-      },
-    ],
+    sources: [],  // Empty — user must add a source via `skillr login` or `skillr source add`
     auth: {},
     telemetry: true,
   };
