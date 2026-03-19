@@ -12,17 +12,26 @@ Follows the **Open Agent Skills Standard**, providing a unified skill discovery,
 - pnpm >= 10
 - Docker & Docker Compose
 
-### Install
+### Quick Start (One Command)
 
 ```bash
 git clone <repo-url> && cd skillr
 pnpm install
+pnpm up        # Builds and starts everything: PostgreSQL, MinIO, Backend, Frontend
 ```
 
-### Start Local Dev Environment
+Open http://localhost:3000 — done! Default admin: `admin` / `admin123`
 
 ```bash
-# Start PostgreSQL + MinIO
+pnpm logs      # Tail all service logs
+pnpm down      # Stop all services (keep data)
+pnpm down:clean # Stop and wipe all data
+```
+
+### Dev Mode (Manual Control)
+
+```bash
+# Start only infrastructure (PostgreSQL + MinIO)
 pnpm dev:infra
 
 # Database migration + seed data

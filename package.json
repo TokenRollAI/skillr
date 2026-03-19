@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:infra": "docker compose -f docker/docker-compose.yml up -d",
+    "up": "docker compose -f docker/docker-compose.yml up -d --build",
+    "down": "docker compose -f docker/docker-compose.yml down",
+    "down:clean": "docker compose -f docker/docker-compose.yml down -v",
+    "logs": "docker compose -f docker/docker-compose.yml logs -f",
+    "logs:backend": "docker compose -f docker/docker-compose.yml logs -f backend",
+    "dev:infra": "docker compose -f docker/docker-compose.yml up -d postgres minio minio-init",
     "dev:infra:down": "docker compose -f docker/docker-compose.yml down -v",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
