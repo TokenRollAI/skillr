@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @skillr/shared build
+      - run: pnpm --filter @skillr/backend typecheck
+      - run: pnpm --filter @skillr/cli typecheck
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @skillr/shared build
+      - run: pnpm --filter @skillr/cli test
+      - run: pnpm --filter @skillr/mcp test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, unit-test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @skillr/shared build
+      - run: pnpm --filter @skillr/backend build
+      - run: pnpm --filter @skillr/cli build
+      - run: pnpm --filter @skillr/mcp build
+      - run: pnpm --filter @skillr/frontend build
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f docker/docker-compose.yml config

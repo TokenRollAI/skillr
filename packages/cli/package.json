@@ -1,0 +1,33 @@
+{
+  "name": "@skillr/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "skillr": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@skillr/shared": "workspace:*",
+    "chalk": "^5.4.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.0.0",
+    "fast-glob": "^3.3.3",
+    "gray-matter": "^4.0.3",
+    "tar": "^7.5.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/tar": "^7.0.87",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

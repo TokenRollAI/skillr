@@ -1,0 +1,21 @@
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+FROM base AS builder
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages/frontend/package.json packages/frontend/
+RUN pnpm install --frozen-lockfile
+COPY packages/frontend/ packages/frontend/
+RUN pnpm --filter @skillhub/frontend build
+
+FROM node:22-alpine AS runner
+RUN addgroup -S app && adduser -S app -G app
+WORKDIR /app
+COPY --from=builder /app/packages/frontend/.next/standalone ./
+COPY --from=builder /app/packages/frontend/.next/static ./.next/static
+COPY --from=builder /app/packages/frontend/public ./public 2>/dev/null || true
+USER app
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "server.js"]
