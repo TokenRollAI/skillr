@@ -1,0 +1,19 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/admin/users/page": "/admin/users",
+  "/admin/audit/page": "/admin/audit",
+  "/device/page": "/device",
+  "/login/page": "/login",
+  "/namespaces/page": "/namespaces",
+  "/page": "/",
+  "/settings/keys/page": "/settings/keys",
+  "/settings/page": "/settings",
+  "/namespaces/create/page": "/namespaces/create",
+  "/admin/page": "/admin",
+  "/skills/page": "/skills",
+  "/namespaces/[name]/page": "/namespaces/[name]",
+  "/register/page": "/register",
+  "/skills/publish/page": "/skills/publish",
+  "/namespaces/[name]/settings/page": "/namespaces/[name]/settings",
+  "/skills/[ns]/[name]/page": "/skills/[ns]/[name]"
+}
