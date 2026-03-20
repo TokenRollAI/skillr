@@ -9,4 +9,6 @@ export default defineConfig({
   banner: {
     js: '#!/usr/bin/env node',
   },
+  // Bundle @skillr/shared into the output so the npm package is standalone
+  noExternal: ['@skillr/shared'],
 });
