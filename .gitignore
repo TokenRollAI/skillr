@@ -6,5 +6,5 @@ dist/
 *.log
 .DS_Store
 coverage/
-
-.next*.png
+.next/
+*.png
