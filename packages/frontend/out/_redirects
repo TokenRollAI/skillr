@@ -1,4 +1,0 @@
-# Cloudflare Pages SPA fallback for dynamic routes
-/skills/:ns/:name /skills/_/_.html 200
-/namespaces/:name/settings /namespaces/_/settings.html 200
-/namespaces/:name /namespaces/_.html 200
