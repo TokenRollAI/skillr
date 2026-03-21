@@ -32,13 +32,17 @@ export async function createApiKey(
   const db = getDb();
   const { fullKey, prefix, keyHash } = await generateApiKey();
 
+  const now = new Date();
   const [record] = await db.insert(apiKeys).values({
+    id: crypto.randomUUID(),
     userId,
     name,
     prefix,
     keyHash,
     scopes,
     expiresAt: expiresAt ?? null,
+    createdAt: now,
+    updatedAt: now,
   }).returning();
 
   return {

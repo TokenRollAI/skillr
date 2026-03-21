@@ -124,13 +124,17 @@ export async function autoSeed() {
   console.log('[seed] Empty database, creating admin user and default namespace...');
 
   const passwordHash = await getRuntime().password.hash('admin123');
+  const now = new Date();
   const [admin] = await db
     .insert(users)
     .values({
+      id: crypto.randomUUID(),
       username: 'admin',
       email: 'admin@skillr.dev',
       passwordHash,
       role: 'admin',
+      createdAt: now,
+      updatedAt: now,
     })
     .onConflictDoNothing()
     .returning();
@@ -139,9 +143,12 @@ export async function autoSeed() {
     const [ns] = await db
       .insert(namespaces)
       .values({
+        id: crypto.randomUUID(),
         name: '@default',
         description: 'Default namespace',
         visibility: 'public',
+        createdAt: now,
+        updatedAt: now,
       })
       .onConflictDoNothing()
       .returning();
@@ -153,6 +160,7 @@ export async function autoSeed() {
           userId: admin.id,
           namespaceId: ns.id,
           role: 'maintainer',
+          createdAt: now,
         })
         .onConflictDoNothing();
     }

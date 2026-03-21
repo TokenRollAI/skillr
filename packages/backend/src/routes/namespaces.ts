@@ -25,12 +25,14 @@ namespaceRoutes.post('/', requireAuth, async (c) => {
   const user = c.get('user' as never) as { sub: string };
 
   try {
-    const [ns] = await db.insert(namespaces).values(parsed.data).returning();
+    const now = new Date();
+    const [ns] = await db.insert(namespaces).values({ id: crypto.randomUUID(), createdAt: now, updatedAt: now, ...parsed.data }).returning();
     // Add creator as maintainer
     await db.insert(nsMembers).values({
       userId: user.sub,
       namespaceId: ns!.id,
       role: 'maintainer',
+      createdAt: now,
     });
     return c.json(ns, 201);
   } catch (err: any) {
@@ -144,7 +146,7 @@ namespaceRoutes.post('/:name/members', requireAuth, requireNsRole('name', 'maint
   if (!ns) return c.json({ error: 'Namespace not found' }, 404);
 
   try {
-    await db.insert(nsMembers).values({ userId, namespaceId: ns.id, role: role || 'viewer' });
+    await db.insert(nsMembers).values({ userId, namespaceId: ns.id, role: role || 'viewer', createdAt: new Date() });
     return c.json({ success: true }, 201);
   } catch (err: any) {
     if (err.code === '23505') return c.json({ error: 'User is already a member' }, 409);

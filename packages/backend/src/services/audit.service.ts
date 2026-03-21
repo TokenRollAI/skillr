@@ -11,7 +11,7 @@ export async function logAuditEvent(params: {
   userAgent?: string;
 }) {
   const db = getDb();
-  await db.insert(auditLogs).values(params);
+  await db.insert(auditLogs).values({ id: crypto.randomUUID(), createdAt: new Date(), ...params });
 }
 
 export async function queryAuditLogs(filters: {

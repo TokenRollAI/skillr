@@ -20,6 +20,7 @@
     "@hono/node-server": "^1.13.0",
     "@hono/zod-validator": "^0.4.0",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@neondatabase/serverless": "^1.0.2",
     "@skillr/shared": "workspace:*",
     "argon2": "^0.41.0",
     "drizzle-orm": "^0.39.0",

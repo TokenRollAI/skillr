@@ -15,10 +15,14 @@ export async function registerUser(username: string, email: string, password: st
   const db = getDb();
   const passwordHash = await getRuntime().password.hash(password);
 
+  const now = new Date();
   const [user] = await db.insert(users).values({
+    id: crypto.randomUUID(),
     username,
     email,
     passwordHash,
+    createdAt: now,
+    updatedAt: now,
   }).returning();
 
   return user;
@@ -49,9 +53,11 @@ export async function createDeviceCode() {
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
   const [record] = await db.insert(deviceCodes).values({
+    id: crypto.randomUUID(),
     deviceCode,
     userCode,
     expiresAt,
+    createdAt: new Date(),
   }).returning();
 
   return { deviceCode: record.deviceCode, userCode: record.userCode, expiresAt };

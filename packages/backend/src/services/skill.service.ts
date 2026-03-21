@@ -27,12 +27,16 @@ export async function createOrUpdateSkill(
     .limit(1);
 
   if (!skill) {
+    const now = new Date();
     [skill] = await db.insert(skills).values({
+      id: crypto.randomUUID(),
       namespaceId: ns.id,
       name: skillName,
       description: description || metadata.description as string || '',
       readme,
       latestTag: tag,
+      createdAt: now,
+      updatedAt: now,
     }).returning();
   } else {
     await db.update(skills).set({
@@ -62,6 +66,7 @@ export async function createOrUpdateSkill(
     }).where(eq(skillTags.id, existingTag[0]!.id));
   } else {
     await db.insert(skillTags).values({
+      id: crypto.randomUUID(),
       skillId: skill!.id,
       tag,
       artifactKey,
@@ -69,6 +74,7 @@ export async function createOrUpdateSkill(
       checksum,
       metadata,
       publishedBy,
+      createdAt: new Date(),
     });
   }
 
