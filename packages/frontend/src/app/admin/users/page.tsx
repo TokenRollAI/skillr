@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -8,8 +9,8 @@ export default function AdminUsersPage() {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
   useEffect(() => { loadUsers(); }, []);
-  async function loadUsers() { const res = await fetch('/api/admin/users', { headers }); if (res.ok) setUsers(await res.json()); }
-  async function changeRole(userId: string, role: string) { await fetch(`/api/admin/users/${userId}/role`, { method: 'PUT', headers, body: JSON.stringify({ role }) }); loadUsers(); }
+  async function loadUsers() { const res = await fetch(apiUrl('/api/admin/users'), { headers }); if (res.ok) setUsers(await res.json()); }
+  async function changeRole(userId: string, role: string) { await fetch(apiUrl(`/api/admin/users/${userId}/role`), { method: 'PUT', headers, body: JSON.stringify({ role }) }); loadUsers(); }
 
   return (
     <div className="space-y-6">

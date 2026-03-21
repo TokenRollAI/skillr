@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 export default function AdminAuditPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -12,7 +13,7 @@ export default function AdminAuditPage() {
   async function loadLogs() {
     const params = new URLSearchParams({ limit: '50' });
     if (actionFilter) params.set('action', actionFilter);
-    const res = await fetch(`/api/admin/audit?${params}`, { headers });
+    const res = await fetch(apiUrl(`/api/admin/audit?${params}`), { headers });
     if (res.ok) setLogs(await res.json());
   }
 

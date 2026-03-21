@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import CopyButton from '../../../components/copy-button';
 import ConfirmDialog from '../../../components/confirm-dialog';
+import { apiUrl } from '@/lib/api-url';
 
 interface ApiKey { id: string; name: string; prefix: string; scopes: string[]; lastUsedAt: string | null; expiresAt: string | null; revoked: boolean; createdAt: string; }
 
@@ -21,17 +22,17 @@ export default function ApiKeysPage() {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
   useEffect(() => { loadKeys(); }, []);
-  async function loadKeys() { const res = await fetch('/api/auth/apikeys', { headers }); if (res.ok) setKeys(await res.json()); }
+  async function loadKeys() { const res = await fetch(apiUrl('/api/auth/apikeys'), { headers }); if (res.ok) setKeys(await res.json()); }
 
   async function createKey(e: React.FormEvent) {
     e.preventDefault(); setError('');
-    const res = await fetch('/api/auth/apikeys', { method: 'POST', headers, body: JSON.stringify({ name: newKeyName, scopes: newKeyScopes, expiresIn: newKeyExpiry }) });
+    const res = await fetch(apiUrl('/api/auth/apikeys'), { method: 'POST', headers, body: JSON.stringify({ name: newKeyName, scopes: newKeyScopes, expiresIn: newKeyExpiry }) });
     if (res.ok) { const data = await res.json(); setCreatedKey(data.key); setShowCreate(false); setNewKeyName(''); loadKeys(); }
     else { const data = await res.json(); setError(data.error || 'Failed'); }
   }
 
-  async function revokeKey() { if (!revokeTarget) return; await fetch(`/api/auth/apikeys/${revokeTarget}`, { method: 'DELETE', headers }); setRevokeTarget(null); loadKeys(); }
-  async function rotateKey() { if (!rotateTarget) return; const res = await fetch(`/api/auth/apikeys/${rotateTarget}/rotate`, { method: 'POST', headers }); if (res.ok) { const data = await res.json(); setCreatedKey(data.key); } setRotateTarget(null); loadKeys(); }
+  async function revokeKey() { if (!revokeTarget) return; await fetch(apiUrl(`/api/auth/apikeys/${revokeTarget}`), { method: 'DELETE', headers }); setRevokeTarget(null); loadKeys(); }
+  async function rotateKey() { if (!rotateTarget) return; const res = await fetch(apiUrl(`/api/auth/apikeys/${rotateTarget}/rotate`), { method: 'POST', headers }); if (res.ok) { const data = await res.json(); setCreatedKey(data.key); } setRotateTarget(null); loadKeys(); }
 
   function getStatus(key: ApiKey) {
     if (key.revoked) return { label: 'Revoked', color: 'var(--color-error)' };

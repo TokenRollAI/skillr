@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -24,7 +25,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       // Register
-      const regRes = await fetch('/api/auth/register', {
+      const regRes = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -37,7 +38,7 @@ export default function RegisterPage() {
       }
 
       // Auto-login after register
-      const loginRes = await fetch('/api/auth/login', {
+      const loginRes = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

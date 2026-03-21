@@ -7,7 +7,7 @@ account_id = "0cb9b897010bc426cd8bf33d8c052d11"
 workers_dev = true
 
 routes = [
-  { pattern = "skillhub.tokenroll.ai/*", zone_name = "tokenroll.ai" }
+  { pattern = "api.skillhub.tokenroll.ai/*", zone_name = "tokenroll.ai" }
 ]
 
 [vars]

@@ -1,18 +1,23 @@
-export default async function SkillsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
-  const params = await searchParams;
-  const q = params.q || '';
-  const page = parseInt(params.page || '1');
+'use client';
 
-  let skills: any[] = [];
-  try {
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
+
+function SkillsContent() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q') || '';
+  const page = parseInt(searchParams.get('page') || '1');
+
+  const [skills, setSkills] = useState<any[]>([]);
+
+  useEffect(() => {
     const searchQuery = new URLSearchParams({ q, page: String(page), limit: '20' });
-    const res = await fetch(`${process.env.BACKEND_INTERNAL_URL}/api/skills?${searchQuery}`, {
-      cache: 'no-store',
-    });
-    if (res.ok) skills = await res.json();
-  } catch {
-    // Backend might not be running
-  }
+    fetch(apiUrl(`/api/skills?${searchQuery}`))
+      .then(res => res.ok ? res.json() : [])
+      .then(setSkills)
+      .catch(() => {});
+  }, [q, page]);
 
   return (
     <div className="space-y-6">
@@ -70,5 +75,13 @@ export default async function SkillsPage({ searchParams }: { searchParams: Promi
         </div>
       )}
     </div>
+  );
+}
+
+export default function SkillsPage() {
+  return (
+    <Suspense fallback={<div className="py-12 text-center text-[var(--color-text-secondary)]">Loading...</div>}>
+      <SkillsContent />
+    </Suspense>
   );
 }

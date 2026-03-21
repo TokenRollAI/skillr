@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fnamespaces\u002F[name]","\u002Fnamespaces\u002F[name]\u002Fsettings","\u002Fskills\u002F[ns]\u002F[name]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

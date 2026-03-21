@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
 
 export default function PublishSkillPage() {
   const [namespaces, setNamespaces] = useState<any[]>([]);
@@ -32,7 +33,7 @@ Explain how to use this skill.
 
   useEffect(() => {
     // Load available namespaces
-    fetch('/api/namespaces')
+    fetch(apiUrl('/api/namespaces'))
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         setNamespaces(data);
@@ -82,7 +83,7 @@ Explain how to use this skill.
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/skills/${namespace}/${skillName}?tag=${tag}`, {
+      const res = await fetch(apiUrl(`/api/skills/${namespace}/${skillName}?tag=${tag}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

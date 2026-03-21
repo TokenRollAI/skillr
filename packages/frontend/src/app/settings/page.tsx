@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -13,7 +14,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (token) {
-      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      fetch(apiUrl('/api/auth/me'), { headers: { Authorization: `Bearer ${token}` } })
         .then(r => r.ok ? r.json() : null)
         .then(d => d && setUser(d));
     }
@@ -23,7 +24,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setMessage('');
     setError('');
-    const res = await fetch('/api/auth/password', {
+    const res = await fetch(apiUrl('/api/auth/password'), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ currentPassword, newPassword }),

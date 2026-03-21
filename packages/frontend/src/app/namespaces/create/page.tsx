@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
 
 export default function CreateNamespacePage() {
   const [name, setName] = useState('');
@@ -25,7 +26,7 @@ export default function CreateNamespacePage() {
     }
 
     try {
-      const res = await fetch('/api/namespaces', {
+      const res = await fetch(apiUrl('/api/namespaces'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

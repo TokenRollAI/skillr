@@ -1,9 +1,17 @@
-export default async function NamespacesPage() {
-  let namespaces: any[] = [];
-  try {
-    const res = await fetch(`${process.env.BACKEND_INTERNAL_URL}/api/namespaces`, { cache: 'no-store' });
-    if (res.ok) namespaces = await res.json();
-  } catch {}
+'use client';
+
+import { useState, useEffect } from 'react';
+import { apiUrl } from '@/lib/api-url';
+
+export default function NamespacesPage() {
+  const [namespaces, setNamespaces] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(apiUrl('/api/namespaces'))
+      .then(res => res.ok ? res.json() : [])
+      .then(setNamespaces)
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="space-y-6">

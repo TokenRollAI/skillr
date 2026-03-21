@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
 
 export default function DeviceCodePage() {
   const [userCode, setUserCode] = useState('');
@@ -28,7 +29,7 @@ export default function DeviceCodePage() {
     }
 
     try {
-      const res = await fetch('/api/auth/device/approve', {
+      const res = await fetch(apiUrl('/api/auth/device/approve'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmDialog from './confirm-dialog';
+import { apiUrl } from '@/lib/api-url';
 
 export default function DeleteSkillButton({ namespace, name }: { namespace: string; name: string }) {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -14,7 +15,7 @@ export default function DeleteSkillButton({ namespace, name }: { namespace: stri
     const token = localStorage.getItem('skillhub_token');
 
     try {
-      const res = await fetch(`/api/skills/${namespace}/${name}`, {
+      const res = await fetch(apiUrl(`/api/skills/${namespace}/${name}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

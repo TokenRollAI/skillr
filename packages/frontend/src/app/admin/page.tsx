@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api-url';
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
@@ -13,8 +14,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
-    fetch('/api/admin/stats', { headers }).then(r => { if (r.status === 403) { setError('Admin access required'); return null; } return r.json(); }).then(d => d && setStats(d));
-    fetch('/api/admin/audit?limit=10', { headers }).then(r => r.ok ? r.json() : []).then(setAudit);
+    fetch(apiUrl('/api/admin/stats'), { headers }).then(r => { if (r.status === 403) { setError('Admin access required'); return null; } return r.json(); }).then(d => d && setStats(d));
+    fetch(apiUrl('/api/admin/audit?limit=10'), { headers }).then(r => r.ok ? r.json() : []).then(setAudit);
   }, []);
 
   if (error) return <div className="py-12 text-center"><h1 className="text-2xl font-bold text-[var(--color-error)]">403 Forbidden</h1><p className="mt-2 text-[var(--color-text-secondary)]">{error}</p></div>;
