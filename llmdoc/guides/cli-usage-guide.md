@@ -1,4 +1,4 @@
-# How to Use the Skillhub CLI
+# How to Use the Skillr CLI
 
 All commands support `--json` flag for machine-readable output. Non-TTY environments auto-select JSON mode.
 
@@ -33,7 +33,7 @@ Reference: `packages/cli/src/commands/source.ts` (`registerSourceCommands`)
 
 ## 3. Authentication Workflow
 
-Uses OAuth 2.0 Device Code flow. Tokens stored per source URL in `~/.skillhub/config.json`.
+Uses OAuth 2.0 Device Code flow. Tokens stored per source URL in `~/.skillr/config.json`.
 
 1. **Login (top-level shortcut):** `skillr login <url>` -- adds source and authenticates in one step.
 2. **Login (via auth subcommand):** `skillr auth login` (or `skillr auth login -s my-registry`)
@@ -51,10 +51,10 @@ Reference: `packages/cli/src/commands/auth.ts` (`loginFlow`, `whoami`, `authStat
 
 Discover and validate `SKILL.md` files in a directory tree.
 
-1. **Scan current dir:** `skillhub scan`
-2. **Scan specific dir:** `skillhub scan ./my-skills`
+1. **Scan current dir:** `skillr scan`
+2. **Scan specific dir:** `skillr scan ./my-skills`
 3. Validates YAML frontmatter for required fields: `name`, `description`.
-4. **JSON mode:** `skillhub scan --json` outputs raw `ScannedSkill[]` array (bypasses `formatScanReport`).
+4. **JSON mode:** `skillr scan --json` outputs raw `ScannedSkill[]` array.
 
 Reference: `packages/cli/src/commands/scan.ts` (`scanDirectory`, `ScannedSkill`)
 
@@ -62,8 +62,8 @@ Reference: `packages/cli/src/commands/scan.ts` (`scanDirectory`, `ScannedSkill`)
 
 Push a skill from CWD to the registry. Requires `SKILL.md` with valid frontmatter.
 
-1. **Full ref:** `skillhub push @myns/my-skill -t v1.0`
-2. **Short name (auto-prepends `@default/`):** `skillhub push my-skill`
+1. **Full ref:** `skillr push @myns/my-skill -t v1.0`
+2. **Short name (auto-prepends `@default/`):** `skillr push my-skill`
 3. Packs CWD as gzipped tarball (excludes `node_modules`, `.git`, `dist`, etc.), computes sha256, uploads via multipart/form-data.
 
 Reference: `packages/cli/src/commands/push.ts` (`pushSkill`)
@@ -72,12 +72,12 @@ Reference: `packages/cli/src/commands/push.ts` (`pushSkill`)
 
 Download, verify, cache, and symlink a skill.
 
-1. **Full ref:** `skillhub install @myns/my-skill -t v1.0`
-2. **Short name (smart resolution):** `skillhub install my-skill`
+1. **Full ref:** `skillr install @myns/my-skill -t v1.0`
+2. **Short name (smart resolution):** `skillr install my-skill`
    - Searches registry, requires exactly one exact name match. Warns on ambiguity.
-3. Extracts to `~/.skillhub/cache/<namespace>/<skill>`.
+3. Extracts to `~/.skillr/cache/<namespace>/<skill>`.
 4. Auto-symlinks into `.claude/skills/` or `.agents/skills/` if agent environment detected in CWD.
-5. Records in `~/.skillhub/installed.json`.
+5. Records in `~/.skillr/installed.json`.
 
 Reference: `packages/cli/src/commands/install.ts` (`installSkill`)
 
@@ -85,16 +85,16 @@ Reference: `packages/cli/src/commands/install.ts` (`installSkill`)
 
 Re-install all (or one) installed skills at `latest` tag.
 
-1. **Update all:** `skillhub update`
-2. **Update one:** `skillhub update @myns/my-skill`
+1. **Update all:** `skillr update`
+2. **Update one:** `skillr update @myns/my-skill`
 
 Reference: `packages/cli/src/commands/install.ts` (`updateSkills`)
 
 ## 8. Searching the Registry
 
-1. **Basic search:** `skillhub search "code review"`
-2. **Filter by namespace:** `skillhub search "lint" -n @myns`
-3. **Limit results:** `skillhub search "test" -l 5`
+1. **Basic search:** `skillr search "code review"`
+2. **Filter by namespace:** `skillr search "lint" -n @myns`
+3. **Limit results:** `skillr search "test" -l 5`
 4. Results table includes an `Install Command` column for convenience.
 
 Reference: `packages/cli/src/commands/search.ts` (`searchSkills`)
@@ -103,8 +103,8 @@ Reference: `packages/cli/src/commands/search.ts` (`searchSkills`)
 
 For programmatic consumption by AI agents or scripts:
 
-1. **Explicit:** Add `--json` to any command: `skillhub search "test" --json`
-2. **Implicit:** Pipe output (non-TTY auto-detection): `skillhub search "test" | jq .`
+1. **Explicit:** Add `--json` to any command: `skillr search "test" --json`
+2. **Implicit:** Pipe output (non-TTY auto-detection): `skillr search "test" | jq .`
 3. All messages become `{ "type": "info|success|error|warn", "message": "..." }` on stdout.
 4. Tables become `{ "type": "table", "data": [{ header: value }] }`.
 5. **Note:** `error` type also goes to stdout in JSON mode (not stderr).

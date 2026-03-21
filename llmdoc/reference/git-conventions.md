@@ -4,7 +4,7 @@ This document provides a summary of the project's branching strategy, commit con
 
 ## 1. Core Summary
 
-Skillhub uses a single `main` branch as the integration target. CI runs on every push to `main` and on every pull request targeting `main`. The pipeline enforces typecheck, unit tests, full build, and Docker validation before merge.
+Skillr uses a single `main` branch as the integration target. CI runs on every push to `main` and on every pull request targeting `main`. The pipeline enforces typecheck, unit tests, full build, and Docker validation before merge.
 
 ## 2. Branch Strategy
 
@@ -14,7 +14,7 @@ Skillhub uses a single `main` branch as the integration target. CI runs on every
 
 ## 3. Commit Message Format
 
-The project has a single initial commit (`f8071c7 Initial commit`). No enforced commit message convention (e.g., Conventional Commits) is configured via tooling. Adopt a descriptive imperative-mood style (e.g., "Add skill search endpoint").
+The project uses Conventional Commits style (e.g., `feat:`, `fix:`, `chore:`, `docs:`). Adopt a descriptive imperative-mood style (e.g., "feat: add skill search endpoint").
 
 ## 4. CI Pipeline
 
@@ -22,8 +22,8 @@ Defined in `.github/workflows/ci.yml`. Triggers: `push` to `main`, `pull_request
 
 | Job                  | Depends On                         | Key Steps                                                        |
 | -------------------- | ---------------------------------- | ---------------------------------------------------------------- |
-| `lint-and-typecheck` | —                                  | `pnpm install`, build `@skillhub/shared`, typecheck backend, cli |
-| `unit-test`          | —                                  | `pnpm install`, build `@skillhub/shared`, test cli, test mcp     |
+| `lint-and-typecheck` | --                                 | `pnpm install`, build `@skillr/shared`, typecheck backend, cli   |
+| `unit-test`          | --                                 | `pnpm install`, build `@skillr/shared`, test cli, test mcp       |
 | `build`              | `lint-and-typecheck`, `unit-test`  | Build all packages: shared, backend, cli, mcp, frontend          |
 | `docker`             | `build`                            | Validate `docker compose -f docker/docker-compose.yml config`    |
 
@@ -33,6 +33,6 @@ Defined in `.github/workflows/ci.yml`. Triggers: `push` to `main`, `pull_request
 
 ## 5. Source of Truth
 
-- **CI Workflow:** `.github/workflows/ci.yml` — Full pipeline definition.
-- **Root Scripts:** `package.json` (`dev:infra`, `build`, `test`, `typecheck`) — Monorepo-level commands.
+- **CI Workflow:** `.github/workflows/ci.yml` -- Full pipeline definition.
+- **Root Scripts:** `package.json` (`dev:infra`, `build`, `test`, `typecheck`) -- Monorepo-level commands.
 - **Docker Config:** `docker/docker-compose.yml`, `docker/Dockerfile.backend`, `docker/Dockerfile.frontend`.

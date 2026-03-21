@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Skillhub 架构设计文档
 
 ## 1. 项目概述

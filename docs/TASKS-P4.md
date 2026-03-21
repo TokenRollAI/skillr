@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Phase 4 任务分解 — 企业加固与生产就绪
 
 ## 总览

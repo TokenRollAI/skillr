@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Skillhub Phase 1 - 任务分解
 
 ## 总览

@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Skillhub Phase 1 - 验证要求文档
 
 ## 1. 测试策略

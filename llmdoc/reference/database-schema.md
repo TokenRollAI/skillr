@@ -2,13 +2,14 @@
 
 ## 1. Core Summary
 
-Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are UUID with `defaultRandom()`. Timestamps use `timestamptz`. The schema supports a multi-tenant namespace model with RBAC, versioned skill artifacts, OAuth Device Code flow, and audit logging.
+Skillr uses 8 tables managed via drizzle-orm. Supports dual database backends: PostgreSQL (Node.js deployment, UUID PKs with `defaultRandom()`, `timestamptz`) and Cloudflare D1 (SQLite, text PKs with UUID generation, `text` timestamps). The schema supports a multi-tenant namespace model with RBAC, versioned skill artifacts, OAuth Device Code flow, API Key authentication, and audit logging.
 
 ## 2. Source of Truth
 
 - **Schema models (runtime):** `packages/backend/src/models/schema.ts` -- re-exports from individual model files.
 - **Drizzle migration schema:** `packages/backend/src/models/drizzle-schema.ts` -- combined schema for `drizzle-kit`.
 - **Initial migration SQL:** `packages/backend/drizzle/0000_motionless_morbius.sql`
+- **D1 migration SQL:** `packages/backend/d1-migration.sql`
 - **Related Architecture:** `/llmdoc/architecture/backend-api.md`
 
 ## 3. Tables
@@ -25,7 +26,7 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 | created_at | timestamptz | NOT NULL, defaultNow |
 | updated_at | timestamptz | NOT NULL, defaultNow |
 
-### namespaces (`packages/backend/src/models/namespace.ts:4-11`)
+### namespaces (`packages/backend/src/models/namespace.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
@@ -36,7 +37,9 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 | created_at | timestamptz | NOT NULL, defaultNow |
 | updated_at | timestamptz | NOT NULL, defaultNow |
 
-### ns_members (`packages/backend/src/models/namespace.ts:13-20`)
+**Visibility values:** `public`, `internal`, `private`. Public = visible to all; Internal = visible to authenticated users; Private = visible only to members and admins.
+
+### ns_members (`packages/backend/src/models/namespace.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
@@ -45,7 +48,7 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 | role | varchar(20) | NOT NULL, default `'viewer'` |
 | created_at | timestamptz | NOT NULL, defaultNow |
 
-### skills (`packages/backend/src/models/skill.ts:5-19`)
+### skills (`packages/backend/src/models/skill.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
@@ -62,7 +65,7 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 
 **Indexes:** `skills_ns_name_unique` UNIQUE(namespace_id, name), `idx_skills_namespace` (namespace_id)
 
-### skill_tags (`packages/backend/src/models/skill.ts:21-34`)
+### skill_tags (`packages/backend/src/models/skill.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
@@ -92,6 +95,24 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 
 **Status values:** `pending` -> `approved` -> `used`
 
+### api_keys (`packages/backend/src/models/api-key.ts`)
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK, defaultRandom |
+| user_id | uuid | NOT NULL, FK -> users(cascade) |
+| name | varchar(128) | NOT NULL |
+| prefix | varchar(20) | NOT NULL |
+| key_hash | varchar(128) | NOT NULL |
+| scopes | jsonb | nullable |
+| last_used_at | timestamptz | nullable |
+| expires_at | timestamptz | nullable |
+| revoked | boolean | NOT NULL, default `false` |
+| created_at | timestamptz | NOT NULL, defaultNow |
+| updated_at | timestamptz | NOT NULL, defaultNow |
+
+**Key format:** `sk_live_<32-byte-hex>`. Only the SHA-256 hash is stored; the prefix field stores `sk_live_<first8>` for lookup.
+
 ### audit_logs (`packages/backend/src/models/audit-log.ts`)
 
 | Column | Type | Constraints |
@@ -115,4 +136,14 @@ Skillhub uses 7 PostgreSQL tables managed via drizzle-orm. All primary keys are 
 - `skill_tags.skill_id` -> `skills.id` (cascade delete)
 - `skill_tags.published_by` -> `users.id` (no cascade)
 - `device_codes.user_id` -> `users.id` (no cascade)
+- `api_keys.user_id` -> `users.id` (cascade delete)
 - `audit_logs.user_id` -> `users.id` (no cascade)
+
+## 5. D1 (SQLite) Compatibility
+
+When deployed on Cloudflare Workers with D1:
+- UUID columns use `text` type with application-level UUID generation.
+- `timestamptz` maps to `text` (ISO 8601 strings).
+- `jsonb` maps to `text` (JSON serialized).
+- `bigint` maps to `integer`.
+- Migration file: `packages/backend/d1-migration.sql`.

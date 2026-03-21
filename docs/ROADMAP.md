@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Skillhub 全阶段路线图 (Phase 2 ~ Phase 4)
 
 > Phase 1 已完成：Monorepo 骨架、CLI 多源管理、认证命令、Docker Compose 基础设施、45 个单元测试全部通过。

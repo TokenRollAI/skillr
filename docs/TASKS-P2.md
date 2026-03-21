@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Phase 2 任务分解 — Backend 核心 + CLI 全链路
 
 ## 总览

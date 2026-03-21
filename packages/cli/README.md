@@ -1,6 +1,6 @@
 # skillr
 
-AI Agent Skill Registry CLI — discover, install and manage skills for Claude, Codex, and more.
+AI Agent Skill Registry CLI -- discover, install and manage skills for Claude, Codex, and more.
 
 ## Install
 
@@ -19,7 +19,7 @@ npx skillr --help    # Run without installing
 ## Quick Start
 
 ```bash
-# 1. Connect to a Skillr server
+# 1. Connect to a Skillr server (URL required, no default)
 skillr login https://your-skillr-server.com
 
 # For local development
@@ -42,11 +42,28 @@ skillr install @default/deploy-helper
 
 ```bash
 skillr login <url>           # Login to a Skillr server (auto-adds as source)
-skillr login                 # Login to default server
 skillr auth logout           # Logout
 skillr auth whoami           # Show current user
 skillr auth status           # Show auth status for all servers
 ```
+
+### API Key Authentication
+
+For CI/CD pipelines and automation, use API Keys instead of interactive login:
+
+```bash
+# Create an API key via web UI (/settings/keys) or API
+# Then use it with any CLI command:
+SKILLHUB_TOKEN=sk_live_xxx skillr push @ns/my-skill
+SKILLHUB_TOKEN=sk_live_xxx skillr whoami
+
+# Or export for the session:
+export SKILLHUB_TOKEN=sk_live_xxx
+skillr push @ns/my-skill
+skillr install @ns/other-skill
+```
+
+Token priority: `SKILLHUB_TOKEN` env var > stored config token.
 
 ### Multi-Server
 
@@ -70,7 +87,7 @@ skillr scan [directory]
 # Publish a skill
 cd my-skill/
 skillr push @namespace/skill-name -t v1.0.0
-skillr push my-skill                         # Short name → @default/my-skill
+skillr push my-skill                         # Short name -> @default/my-skill
 
 # Install a skill
 skillr install @namespace/skill-name
@@ -93,7 +110,7 @@ skillr search deploy
 
 # JSON output (for agents/scripts)
 skillr search deploy --json
-echo "deploy" | skillr search --json    # Auto-detects pipe → JSON
+echo "deploy" | skillr search --json    # Auto-detects pipe -> JSON
 ```
 
 ## SKILL.md Format
@@ -118,7 +135,7 @@ Required fields: `name`, `description`
 
 | Variable | Description |
 |----------|-------------|
-| `SKILLHUB_TOKEN` | API key or JWT for authentication (overrides config) |
+| `SKILLHUB_TOKEN` | API key (`sk_live_*`) or JWT for authentication (overrides config) |
 | `SKILLHUB_CONFIG_DIR` | Custom config directory (default: `~/.skillr`) |
 
 ## Configuration
@@ -139,6 +156,8 @@ Config is stored at `~/.skillr/config.json`:
 
 ## Deploy Your Own Skillr Server
 
+### Docker (Node.js)
+
 ```bash
 git clone https://github.com/tokenroll/skillr
 cd skillr
@@ -146,7 +165,17 @@ pnpm install
 pnpm up    # One-command Docker startup (PostgreSQL + MinIO + Backend + Frontend)
 ```
 
-Open http://localhost:3000 — default admin: `admin` / `admin123`
+Open http://localhost:3000 -- default admin: `admin` / `admin123`
+
+### Cloudflare Workers (D1 + R2)
+
+```bash
+wrangler d1 create skillr-db
+wrangler r2 bucket create skillr-artifacts
+wrangler d1 execute skillr-db --remote --file=packages/backend/d1-migration.sql
+wrangler secret put JWT_SECRET
+wrangler deploy
+```
 
 ## License
 

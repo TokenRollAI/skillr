@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Phase 3 任务分解 — Web UI + MCP Gateway
 
 ## 总览

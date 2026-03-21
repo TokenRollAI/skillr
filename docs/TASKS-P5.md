@@ -1,3 +1,5 @@
+> **Historical Document** — This was a planning document created during development. For current documentation, see `llmdoc/`.
+
 # Phase 5: 管理界面完善 + API Key 系统
 
 ## 总览
