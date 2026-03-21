@@ -1,0 +1,19 @@
+name = "skillr-api"
+main = "src/entry-worker.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+FRONTEND_URL = "https://skillr.yourdomain.com"
+
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "skillr-artifacts"
+
+[env.production]
+vars = { FRONTEND_URL = "https://skillr.yourdomain.com" }
+
+# Hyperdrive for PostgreSQL (uncomment when configured)
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "your-hyperdrive-id"

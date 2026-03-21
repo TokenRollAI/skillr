@@ -1,9 +1,12 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm'],
-  target: 'node18',
-  clean: true,
-  shims: true,
-});
+export default defineConfig([
+  {
+    entry: { 'index': 'src/entry-node.ts' },
+    format: ['esm'],
+    target: 'node18',
+    clean: true,
+    shims: true,
+    outDir: 'dist',
+  },
+]);

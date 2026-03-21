@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import * as authService from '../services/auth.service.js';
 import { getEnv } from '../env.js';
 import { logAuditEvent } from '../services/audit.service.js';
+import { getRuntime } from '../runtime/index.js';
 
 const registerSchema = z.object({
   username: z.string().min(3).max(64).regex(/^[a-zA-Z0-9_-]+$/),
@@ -156,11 +157,10 @@ authRoutes.put('/password', requireAuth, async (c) => {
   const [fullUser] = await db.select().from(users).where(eq(users.id, user.sub)).limit(1);
   if (!fullUser?.passwordHash) return c.json({ error: 'Cannot change password' }, 400);
 
-  const argon2 = await import('argon2');
-  const valid = await argon2.verify(fullUser.passwordHash, parsed.data.currentPassword);
+  const valid = await getRuntime().password.verify(fullUser.passwordHash, parsed.data.currentPassword);
   if (!valid) return c.json({ error: 'Current password is incorrect' }, 401);
 
-  const newHash = await argon2.hash(parsed.data.newPassword);
+  const newHash = await getRuntime().password.hash(parsed.data.newPassword);
   await db.update(users).set({ passwordHash: newHash, updatedAt: new Date() }).where(eq(users.id, user.sub));
 
   await logAuditEvent({ userId: user.sub, action: 'user.password_change' });

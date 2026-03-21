@@ -3,10 +3,15 @@ import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireNsRole } from '../middleware/auth.js';
 import * as skillService from '../services/skill.service.js';
-import { createHash } from 'crypto';
 import { getDb } from '../db.js';
 import { namespaces, nsMembers } from '../models/schema.js';
 import { logAuditEvent } from '../services/audit.service.js';
+
+async function sha256(data: Uint8Array | ArrayBuffer | Buffer): Promise<string> {
+  const input = data instanceof Uint8Array ? new Uint8Array(data) : data;
+  const hashBuffer = await crypto.subtle.digest('SHA-256', input as ArrayBuffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export const skillsRoutes = new Hono();
 
@@ -65,7 +70,7 @@ skillsRoutes.post('/:ns/:name', requireAuth, async (c) => {
   if (tarball.length === 0) return c.json({ error: 'Empty tarball' }, 400);
   if (tarball.length > 50 * 1024 * 1024) return c.json({ error: 'Tarball too large (max 50MB)' }, 413);
 
-  const checksum = createHash('sha256').update(tarball).digest('hex');
+  const checksum = await sha256(tarball);
 
   try {
     const result = await skillService.createOrUpdateSkill(

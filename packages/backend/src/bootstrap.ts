@@ -3,7 +3,7 @@ import { join } from 'path';
 import { getDb } from './db.js';
 import { sql } from 'drizzle-orm';
 import { users, namespaces, nsMembers } from './models/schema.js';
-import * as argon2 from 'argon2';
+import { getRuntime } from './runtime/index.js';
 
 /**
  * Auto-migrate: Execute SQL migration files if tables don't exist yet.
@@ -123,7 +123,7 @@ export async function autoSeed() {
 
   console.log('[seed] Empty database, creating admin user and default namespace...');
 
-  const passwordHash = await argon2.hash('admin123');
+  const passwordHash = await getRuntime().password.hash('admin123');
   const [admin] = await db
     .insert(users)
     .values({

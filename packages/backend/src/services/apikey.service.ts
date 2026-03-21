@@ -1,14 +1,25 @@
-import { randomBytes, createHash } from 'crypto';
 import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db.js';
 import { apiKeys } from '../models/schema.js';
 import { users } from '../models/schema.js';
 
-function generateApiKey(): { fullKey: string; prefix: string; keyHash: string } {
-  const random = randomBytes(32).toString('hex');
+function generateRandomHex(bytes: number): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256(data: string): Promise<string> {
+  const encoded = new TextEncoder().encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateApiKey(): Promise<{ fullKey: string; prefix: string; keyHash: string }> {
+  const random = generateRandomHex(32);
   const fullKey = `sk_live_${random}`;
   const prefix = `sk_live_${random.slice(0, 4)}...`;
-  const keyHash = createHash('sha256').update(fullKey).digest('hex');
+  const keyHash = await sha256(fullKey);
   return { fullKey, prefix, keyHash };
 }
 
@@ -19,7 +30,7 @@ export async function createApiKey(
   expiresAt?: Date,
 ) {
   const db = getDb();
-  const { fullKey, prefix, keyHash } = generateApiKey();
+  const { fullKey, prefix, keyHash } = await generateApiKey();
 
   const [record] = await db.insert(apiKeys).values({
     userId,
@@ -88,7 +99,7 @@ export async function rotateApiKey(id: string, userId: string) {
 
 export async function validateApiKey(fullKey: string) {
   const db = getDb();
-  const keyHash = createHash('sha256').update(fullKey).digest('hex');
+  const keyHash = await sha256(fullKey);
 
   const [record] = await db.select({
     id: apiKeys.id,

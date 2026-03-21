@@ -1,14 +1,19 @@
 import { eq } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
-import * as argon2 from 'argon2';
+import { getRuntime } from '../runtime/index.js';
 import { getDb } from '../db.js';
 import { users } from '../models/schema.js';
 import { deviceCodes } from '../models/schema.js';
 import { signJwt } from '../utils/jwt.js';
 
+function generateRandomHex(bytes: number): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function registerUser(username: string, email: string, password: string) {
   const db = getDb();
-  const passwordHash = await argon2.hash(password);
+  const passwordHash = await getRuntime().password.hash(password);
 
   const [user] = await db.insert(users).values({
     username,
@@ -25,7 +30,7 @@ export async function authenticateUser(username: string, password: string) {
 
   if (!user || !user.passwordHash) return null;
 
-  const valid = await argon2.verify(user.passwordHash, password);
+  const valid = await getRuntime().password.verify(user.passwordHash, password);
   if (!valid) return null;
 
   const token = await signJwt({
@@ -39,8 +44,8 @@ export async function authenticateUser(username: string, password: string) {
 
 export async function createDeviceCode() {
   const db = getDb();
-  const deviceCode = randomBytes(32).toString('hex');
-  const userCode = randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
+  const deviceCode = generateRandomHex(32);
+  const userCode = generateRandomHex(4).toUpperCase().slice(0, 8);
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
   const [record] = await db.insert(deviceCodes).values({

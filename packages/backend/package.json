@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/entry-node.ts",
     "build": "tsup",
     "start": "node dist/index.js",
     "db:migrate": "node --import tsx/esm node_modules/drizzle-kit/bin.cjs migrate",
