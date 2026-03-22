@@ -1,6 +1,6 @@
 {
   "name": "skillr",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "AI Agent Skill Registry CLI - discover, install and manage skills for Claude, Codex, and more",
   "type": "module",
   "bin": {
@@ -26,9 +26,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tokenroll/skillr.git"
+    "url": "git+https://github.com/TokenRollAI/skillr.git"
   },
-  "homepage": "https://github.com/tokenroll/skillr#readme",
+  "homepage": "https://github.com/TokenRollAI/skillr#readme",
   "engines": {
     "node": ">=18"
   },
