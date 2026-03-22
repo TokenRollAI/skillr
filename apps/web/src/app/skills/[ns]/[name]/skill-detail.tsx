@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { ExternalLink, User, Scale, GitBranch, Tag, Bot, Package } from 'lucide-react';
 import CopyButton from '../../../../components/copy-button';
 import DeleteSkillButton from '../../../../components/delete-skill-button';
 import { apiUrl } from '@/lib/api';
@@ -43,6 +44,9 @@ export default function SkillDetailPage() {
   }
 
   const installCmd = `skillr install ${ns}/${name}`;
+  const agentsList: string[] = skill.agents || [];
+  const searchTagsList: string[] = skill.searchTags || [];
+  const dependenciesList: string[] = skill.dependencies || [];
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -54,6 +58,30 @@ export default function SkillDetailPage() {
             {skill.name}
           </h1>
           <p className="mt-2 text-[var(--color-text-secondary)]">{skill.description}</p>
+
+          {/* Tags badges */}
+          {(agentsList.length > 0 || searchTagsList.length > 0) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {agentsList.map((agent: string) => (
+                <span
+                  key={`agent-${agent}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300"
+                >
+                  <Bot className="h-3 w-3" />
+                  {agent}
+                </span>
+              ))}
+              {searchTagsList.map((tag: string) => (
+                <span
+                  key={`tag-${tag}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300"
+                >
+                  <Tag className="h-3 w-3" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Install command */}
@@ -70,6 +98,21 @@ export default function SkillDetailPage() {
             {skill.readme || 'No README available.'}
           </pre>
         </div>
+
+        {/* Dependencies */}
+        {dependenciesList.length > 0 && (
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
+            <h2 className="mb-4 text-lg font-semibold flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Dependencies
+            </h2>
+            <ul className="space-y-1 text-sm">
+              {dependenciesList.map((dep: string) => (
+                <li key={dep} className="text-[var(--color-text-secondary)] font-mono">{dep}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
@@ -85,12 +128,73 @@ export default function SkillDetailPage() {
               <dt className="text-[var(--color-text-secondary)]">Downloads</dt>
               <dd>{skill.downloads || 0}</dd>
             </div>
+            {skill.author && (
+              <div className="flex justify-between">
+                <dt className="text-[var(--color-text-secondary)] flex items-center gap-1">
+                  <User className="h-3.5 w-3.5" />
+                  Author
+                </dt>
+                <dd>{skill.author}</dd>
+              </div>
+            )}
+            {skill.license && (
+              <div className="flex justify-between">
+                <dt className="text-[var(--color-text-secondary)] flex items-center gap-1">
+                  <Scale className="h-3.5 w-3.5" />
+                  License
+                </dt>
+                <dd>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-300">
+                    {skill.license}
+                  </span>
+                </dd>
+              </div>
+            )}
+            {skill.repository && (
+              <div className="flex justify-between">
+                <dt className="text-[var(--color-text-secondary)] flex items-center gap-1">
+                  <GitBranch className="h-3.5 w-3.5" />
+                  Repository
+                </dt>
+                <dd>
+                  <a
+                    href={skill.repository}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-primary)] hover:underline inline-flex items-center gap-1"
+                  >
+                    Link
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-[var(--color-text-secondary)]">Updated</dt>
               <dd>{new Date(skill.updatedAt).toLocaleDateString()}</dd>
             </div>
           </dl>
         </div>
+
+        {/* Agents */}
+        {agentsList.length > 0 && (
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] flex items-center gap-1">
+              <Bot className="h-3.5 w-3.5" />
+              COMPATIBLE AGENTS
+            </h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {agentsList.map((agent: string) => (
+                <span
+                  key={agent}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300"
+                >
+                  {agent}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Versions */}
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">

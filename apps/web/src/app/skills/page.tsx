@@ -67,6 +67,26 @@ function SkillsContent() {
               <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                 {skill.description || 'No description'}
               </p>
+              {((skill.agents && skill.agents.length > 0) || (skill.searchTags && skill.searchTags.length > 0)) && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(skill.agents || []).map((agent: string) => (
+                    <span
+                      key={`agent-${agent}`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300"
+                    >
+                      {agent}
+                    </span>
+                  ))}
+                  {(skill.searchTags || []).map((tag: string) => (
+                    <span
+                      key={`tag-${tag}`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="mt-2 text-xs text-[var(--color-text-secondary)]">
                 ↓ {skill.downloads || 0} downloads
               </div>

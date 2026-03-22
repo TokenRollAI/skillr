@@ -9,6 +9,10 @@ export default function PublishSkillPage() {
   const [namespace, setNamespace] = useState('');
   const [skillName, setSkillName] = useState('');
   const [description, setDescription] = useState('');
+  const [author, setAuthor] = useState('');
+  const [license, setLicense] = useState('');
+  const [agentsInput, setAgentsInput] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [readme, setReadme] = useState(`---
 name:
 description:
@@ -52,6 +56,13 @@ Explain how to use this skill.
     }
   }, [skillName, description]);
 
+  function parseCommaSeparated(value: string): string[] {
+    return value
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -82,6 +93,9 @@ Explain how to use this skill.
 
     setLoading(true);
 
+    const agents = parseCommaSeparated(agentsInput);
+    const tags = parseCommaSeparated(tagsInput);
+
     try {
       const res = await fetch(apiUrl(`/api/skills/${namespace}/${skillName}?tag=${tag}`), {
         method: 'POST',
@@ -92,7 +106,14 @@ Explain how to use this skill.
         body: JSON.stringify({
           description,
           readme,
-          metadata: { name: skillName, description },
+          metadata: {
+            name: skillName,
+            description,
+            ...(author && { author }),
+            ...(license && { license }),
+            ...(agents.length > 0 && { agents }),
+            ...(tags.length > 0 && { tags }),
+          },
         }),
       });
 
@@ -180,6 +201,90 @@ Explain how to use this skill.
             className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none"
             required
           />
+        </div>
+
+        {/* Author + License */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">
+              Author
+              <span className="ml-1 text-xs text-[var(--color-text-secondary)]">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={author}
+              onChange={e => setAuthor(e.target.value)}
+              placeholder="Your Name"
+              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">
+              License
+              <span className="ml-1 text-xs text-[var(--color-text-secondary)]">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={license}
+              onChange={e => setLicense(e.target.value)}
+              placeholder="MIT"
+              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Agents */}
+        <div>
+          <label className="block text-sm text-[var(--color-text-secondary)] mb-1">
+            Compatible Agents
+            <span className="ml-1 text-xs text-[var(--color-text-secondary)]">(optional, comma-separated)</span>
+          </label>
+          <input
+            type="text"
+            value={agentsInput}
+            onChange={e => setAgentsInput(e.target.value)}
+            placeholder="claude-code, codex, openClaw"
+            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none"
+          />
+          {agentsInput && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {parseCommaSeparated(agentsInput).map((agent) => (
+                <span
+                  key={agent}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/50 text-purple-300"
+                >
+                  {agent}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className="block text-sm text-[var(--color-text-secondary)] mb-1">
+            Tags
+            <span className="ml-1 text-xs text-[var(--color-text-secondary)]">(optional, comma-separated)</span>
+          </label>
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={e => setTagsInput(e.target.value)}
+            placeholder="testing, automation, react"
+            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none"
+          />
+          {tagsInput && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {parseCommaSeparated(tagsInput).map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Version Tag */}

@@ -151,6 +151,12 @@ skillsRoutes.get('/:ns/:name', async (c) => {
     latestTag: result.skill.latestTag,
     downloads: result.skill.downloads,
     readme: result.skill.readme,
+    author: result.skill.author,
+    license: result.skill.license,
+    repository: result.skill.repository,
+    agents: result.skill.agents,
+    searchTags: result.skill.searchTags,
+    dependencies: result.skill.dependencies,
     createdAt: result.skill.createdAt,
     updatedAt: result.skill.updatedAt,
   });
@@ -220,6 +226,8 @@ skillsRoutes.get('/', async (c) => {
     description: r.skill.description,
     latestTag: r.skill.latestTag,
     downloads: r.skill.downloads,
+    agents: r.skill.agents,
+    searchTags: r.skill.searchTags,
     updatedAt: r.skill.updatedAt,
   })));
 });
