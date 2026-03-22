@@ -83,14 +83,14 @@ CREATE INDEX idx_api_keys_prefix ON api_keys(prefix);
 ### API Key 格式
 
 ```
-sk_live_<32字节随机hex>
+sk_example_<32字节随机hex>
 ```
 
-示例: `sk_live_a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5`
+示例: `sk_example_a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5`
 
-- 前缀 `sk_live_` 便于识别
+- 前缀 `sk_example_` 便于识别
 - 完整 key 只在创建时返回一次，之后只存 hash
-- 列表展示时只显示 `sk_live_a3f8...` (前 4 位)
+- 列表展示时只显示 `sk_example_a3f8...` (前 4 位)
 
 ### 后端 API 端点
 
@@ -116,11 +116,11 @@ sk_live_<32字节随机hex>
   - `validateApiKey(fullKey)` → 校验 key, 更新 last_used_at, 返回用户信息
 - [P5-1.5] 创建 `packages/backend/src/routes/apikeys.ts`:
   - 实现 5 个 CRUD 端点
-  - 创建时返回: `{ id, name, key: "sk_live_...", prefix, scopes, createdAt }`
+  - 创建时返回: `{ id, name, key: "sk_example_...", prefix, scopes, createdAt }`
   - 列出时返回: `{ id, name, prefix, scopes, lastUsedAt, expiresAt, revoked, createdAt }`
 - [P5-1.6] 更新 `packages/backend/src/middleware/auth.ts`:
-  - 支持 `Authorization: Bearer sk_live_...` API Key 认证
-  - 检测 token 前缀: 以 `sk_live_` 开头 → 走 API Key 校验; 否则 → 走 JWT 校验
+  - 支持 `Authorization: Bearer sk_example_...` API Key 认证
+  - 检测 token 前缀: 以 `sk_example_` 开头 → 走 API Key 校验; 否则 → 走 JWT 校验
   - API Key 校验: sha256 后查库, 检查 revoked/expired, 更新 last_used_at
 - [P5-1.7] 在 `packages/backend/src/index.ts` 注册 apikeys 路由
 - [P5-1.8] 审计日志: `apikey.create`, `apikey.revoke`, `apikey.rotate`
@@ -132,7 +132,7 @@ sk_live_<32字节随机hex>
 - 吊销后的 key 返回 401
 - 过期的 key 返回 401
 - rotate 后旧 key 失效, 新 key 可用
-- `SKILLHUB_TOKEN=sk_live_xxx skillhub auth whoami` 可以工作
+- `SKILLHUB_TOKEN=sk_example_xxx skillhub auth whoami` 可以工作
 
 ### 单元测试 (12)
 
@@ -149,7 +149,7 @@ describe('API Key Service')
   ✓ rotate 后旧 key 失效
   ✓ rotate 后新 key 可用
   ✓ 其他用户无法操作别人的 key
-  ✓ auth 中间件支持 sk_live_ 前缀
+  ✓ auth 中间件支持 sk_example_ 前缀
 ```
 
 ---
@@ -249,7 +249,7 @@ describe('Namespace Pages')
   - 创建成功后**一次性展示完整 key** (带复制按钮 + 警告"此 key 不会再次显示")
   - Key 列表表格:
     - 名称
-    - 前缀 (`sk_live_a3f8...`)
+    - 前缀 (`sk_example_a3f8...`)
     - 权限范围 (badges)
     - 最后使用时间
     - 创建时间
@@ -263,7 +263,7 @@ describe('Namespace Pages')
 
 ### 验收标准
 
-- 创建 Key 后可立即在 CLI 中使用: `SKILLHUB_TOKEN=sk_live_xxx skillhub auth whoami`
+- 创建 Key 后可立即在 CLI 中使用: `SKILLHUB_TOKEN=sk_example_xxx skillhub auth whoami`
 - Key 创建后完整值仅展示一次
 - Revoke 后 Key 立即失效
 - Rotate 后旧 Key 失效, 新 Key 可用
@@ -333,7 +333,7 @@ describe('API Key UI')
 ### 验收标准
 
 - 可以通过 CLI 创建和管理 API Key
-- `SKILLHUB_TOKEN=sk_live_xxx` 可用于所有 CLI 命令
+- `SKILLHUB_TOKEN=sk_example_xxx` 可用于所有 CLI 命令
 
 ---
 
