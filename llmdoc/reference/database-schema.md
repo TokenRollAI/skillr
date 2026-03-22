@@ -8,7 +8,8 @@ Skillr uses 8 tables managed via drizzle-orm with SQLite (Cloudflare D1). All ta
 
 - **Schema models (runtime):** `apps/api/src/models/schema.ts` -- re-exports from individual model files.
 - **Individual model files:** `apps/api/src/models/user.ts`, `namespace.ts`, `skill.ts`, `device-code.ts`, `api-key.ts`, `audit-log.ts`
-- **D1 migration SQL:** `apps/api/d1-migration.sql`
+- **D1 migration SQL (initial):** `apps/api/d1-migration.sql`
+- **D1 migration SQL (skill metadata):** `apps/api/migrations/0001-skill-metadata.sql` -- Adds `author`, `license`, `repository`, `agents`, `search_tags` columns to `skills` table.
 - **Related Architecture:** `/llmdoc/architecture/backend-api.md`
 
 ## 3. Tables
@@ -55,8 +56,13 @@ Skillr uses 8 tables managed via drizzle-orm with SQLite (Cloudflare D1). All ta
 | description | text | nullable |
 | latest_tag | text | default `'latest'` |
 | readme | text | nullable |
-| dependencies | text (json) | default `{}` |
+| dependencies | text (json) | `string[]`, default `[]` |
 | downloads | integer | NOT NULL, default `0` |
+| author | text | nullable |
+| license | text | nullable |
+| repository | text | nullable |
+| agents | text (json) | `string[]`, default `[]` |
+| search_tags | text (json) | `string[]`, default `[]` |
 | created_at | text | NOT NULL, ISO 8601 |
 | updated_at | text | NOT NULL, ISO 8601 |
 

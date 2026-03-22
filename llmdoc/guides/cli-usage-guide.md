@@ -49,24 +49,26 @@ Reference: `packages/cli/src/commands/auth.ts` (`loginFlow`, `whoami`, `authStat
 
 ## 4. Skill Scanning
 
-Discover and validate `SKILL.md` files in a directory tree.
+Discover and validate skills in a directory tree. Prioritizes `skill.json` manifest; falls back to `SKILL.md` traversal.
 
 1. **Scan current dir:** `skillr scan`
 2. **Scan specific dir:** `skillr scan ./my-skills`
-3. Validates YAML frontmatter for required fields: `name`, `description`.
-4. **JSON mode:** `skillr scan --json` outputs raw `ScannedSkill[]` array.
+3. If `skill.json` exists: validates workspace entries or single-skill root. Otherwise: finds `SKILL.md` files via glob traversal.
+4. Validates required fields: `name`, `description`.
+5. **JSON mode:** `skillr scan --json` outputs raw `ScannedSkill[]` array.
 
-Reference: `packages/cli/src/commands/scan.ts` (`scanDirectory`, `ScannedSkill`)
+Reference: `packages/cli/src/commands/scan.ts` (`scanDirectory`), `packages/cli/src/lib/manifest.ts` (`loadManifest`)
 
 ## 5. Publishing a Skill
 
-Push a skill from CWD to the registry. Requires `SKILL.md` with valid frontmatter.
+Push skill(s) from CWD to the registry. Three modes based on `skill.json` presence:
 
-1. **Full ref:** `skillr push @myns/my-skill -t v1.0`
-2. **Short name (auto-prepends `@default/`):** `skillr push my-skill`
-3. Packs CWD as gzipped tarball (excludes `node_modules`, `.git`, `dist`, etc.), computes sha256, uploads via multipart/form-data.
+1. **Workspace mode** (has `skill.json` with `skills` array): `skillr push` publishes all skills. `skillr push example` publishes a single entry by name/path.
+2. **Single mode** (has `skill.json` without `skills`): `skillr push` uses manifest's `name`/`namespace`. `manifest.version` auto-maps to tag.
+3. **Legacy mode** (no `skill.json`): `skillr push @myns/my-skill -t v1.0` with explicit ref. Requires `SKILL.md` frontmatter.
+4. Tag override: `-t v1.0` overrides auto-detected tag. Non-`latest` tags auto-sync to `latest` on the backend.
 
-Reference: `packages/cli/src/commands/push.ts` (`pushSkill`)
+Reference: `packages/cli/src/commands/push.ts` (`pushSkill`, `pushSingle`, `pushWorkspace`, `pushLegacy`)
 
 ## 6. Installing a Skill
 
@@ -94,12 +96,25 @@ Reference: `packages/cli/src/commands/install.ts` (`updateSkills`)
 
 1. **Basic search:** `skillr search "code review"`
 2. **Filter by namespace:** `skillr search "lint" -n @myns`
-3. **Limit results:** `skillr search "test" -l 5`
-4. Results table includes an `Install Command` column for convenience.
+3. **Filter by agent:** `skillr search "lint" --agent claude-code`
+4. **Filter by tag:** `skillr search "lint" --tag deployment`
+5. **Limit results:** `skillr search "test" -l 5`
+6. Results table includes an `Install Command` column for convenience.
 
 Reference: `packages/cli/src/commands/search.ts` (`searchSkills`)
 
-## 9. JSON Output Mode for Agents
+## 9. Initializing a Skill Project
+
+Scaffold a new skill project with `skill.json` manifest.
+
+1. **Single skill:** `skillr init --name my-skill --namespace @myns`
+   - Creates `skill.json` and template `SKILL.md` in CWD.
+2. **Workspace:** `skillr init --workspace --name my-project --namespace @myns`
+   - Creates `skill.json` with `skills` array and `skills/example/SKILL.md`.
+
+Reference: `packages/cli/src/commands/init.ts` (`registerInitCommand`)
+
+## 10. JSON Output Mode for Agents
 
 For programmatic consumption by AI agents or scripts:
 

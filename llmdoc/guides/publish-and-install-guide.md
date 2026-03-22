@@ -2,32 +2,36 @@
 
 A step-by-step guide for creating, publishing, installing, updating, and discovering skills on the Skillr registry.
 
-## 1. Create a SKILL.md
+## 1. Create a Skill Project
 
-Create a `SKILL.md` file in the skill's root directory with YAML frontmatter. Required fields: `name`, `description`. Optional: `version`.
+Two approaches: **skill.json** (recommended) or **SKILL.md-only** (legacy).
+
+### 1a. Using skill.json (recommended)
+
+Run `skillr init --name my-deploy-helper --namespace @myns` to scaffold, or create `skill.json` manually. Required fields: `name`, `description`. Optional: `version`, `author`, `license`, `repository`, `agents`, `tags`, `dependencies`, `files`, `namespace`.
+
+For workspace mode (multiple skills): `skillr init --workspace --name my-project --namespace @myns`
+
+Reference: `packages/cli/src/commands/init.ts`, `packages/shared/src/types.ts` (`SkillManifest`).
+
+### 1b. SKILL.md-only (legacy)
+
+Create a `SKILL.md` file with YAML frontmatter. Required fields: `name`, `description`. Optional: `version`.
 
 Reference: `packages/cli/src/commands/scan.ts` (`REQUIRED_FIELDS`).
-
-```yaml
----
-name: my-deploy-helper
-description: Automates frontend deployment to S3 and CloudFront
-version: 1.0.0
----
-# My Deploy Helper
-Detailed instructions for the AI agent...
-```
 
 Validate locally with `skillr scan` (runs `scanDirectory` -- no network required).
 
 ## 2. Publish a Skill (CLI)
 
 1. Authenticate: `skillr login <server-url>` (OAuth Device Code flow).
-2. Navigate to the directory containing `SKILL.md`.
-3. Run: `skillr push @my-namespace/my-deploy-helper` (or short: `skillr push my-deploy-helper` to use `@default` namespace).
-4. Optionally specify a tag: `skillr push @my-namespace/my-deploy-helper -t v1.0.0` (defaults to `latest`).
+2. Navigate to the directory containing `skill.json` (or `SKILL.md`).
+3. **With skill.json:** `skillr push` (uses manifest's name/namespace/version). `skillr push -t v2.0` to override tag.
+4. **Workspace mode:** `skillr push` publishes all skills. `skillr push example` publishes a single entry.
+5. **Legacy mode:** `skillr push @my-namespace/my-deploy-helper -t v1.0.0` with explicit ref.
+6. Non-`latest` tags automatically sync to `latest` on the backend.
 
-The CLI packs the directory into a `.tar.gz`, computes SHA256, and uploads via multipart POST to the registry. See `/llmdoc/architecture/skill-lifecycle.md` section 3b.
+The CLI packs the directory into a `.tar.gz` (respecting `files.include/exclude` from manifest), computes SHA256, and uploads via multipart POST. Metadata fields (`author`, `license`, `repository`, `agents`, `tags`, `dependencies`) are sent from `skill.json`. See `/llmdoc/architecture/skill-lifecycle.md` section 3b.
 
 ## 2b. Web Publishing (Browser)
 

@@ -1,6 +1,6 @@
 # Skillr - LLM Documentation Index
 
-Skillr is an enterprise-grade skill aggregation and distribution platform for AI coding agents (Claude Code, Codex, OpenClaw). It provides a CLI (`skillr`), REST API backend, web frontend, and MCP gateway (dual-mode: built-in SSE + standalone stdio) for publishing, discovering, installing, and managing packaged AI agent skills (`.tar.gz` with `SKILL.md` manifest) across multi-registry federated namespaces with RBAC access control. Cloudflare-First architecture: Workers + D1 + R2. 8 database tables, 7 API route groups, 8 CLI commands. API Key system (`sk_live_*`) for programmatic access.
+Skillr is an enterprise-grade skill aggregation and distribution platform for AI coding agents (Claude Code, Codex, OpenClaw). It provides a CLI (`skillr`), REST API backend, web frontend, and MCP gateway (dual-mode: built-in SSE + standalone stdio) for publishing, discovering, installing, and managing packaged AI agent skills (`.tar.gz` with `skill.json` manifest or legacy `SKILL.md` frontmatter) across multi-registry federated namespaces with RBAC access control. Cloudflare-First architecture: Workers + D1 + R2. 8 database tables, 7 API route groups, 9 CLI commands. API Key system (`sk_live_*`) for programmatic access. Supports single-skill and workspace (multi-skill) project modes via `skill.json`.
 
 ## Quick Navigation
 
@@ -11,6 +11,7 @@ Skillr is an enterprise-grade skill aggregation and distribution platform for AI
 | How does the backend API work? | [architecture/backend-api.md](architecture/backend-api.md) |
 | How does auth and RBAC work? | [architecture/auth-and-rbac.md](architecture/auth-and-rbac.md) |
 | How does a skill flow through the system? | [architecture/skill-lifecycle.md](architecture/skill-lifecycle.md) |
+| How does skill.json manifest work? | [architecture/skill-manifest.md](architecture/skill-manifest.md) |
 | How do I use CLI commands? | [guides/cli-usage-guide.md](guides/cli-usage-guide.md) |
 | How do I authenticate? | [guides/authentication-guide.md](guides/authentication-guide.md) |
 | How do I publish or install a skill? | [guides/publish-and-install-guide.md](guides/publish-and-install-guide.md) |
@@ -32,7 +33,8 @@ Skillr is an enterprise-grade skill aggregation and distribution platform for AI
 
 | Document | Description |
 |----------|-------------|
-| [cli-command-system.md](architecture/cli-command-system.md) | Commander.js CLI structure: 8 commands (login, source, auth, scan, push, install, update, search), dual-mode output, config at `~/.skillr/`. |
+| [cli-command-system.md](architecture/cli-command-system.md) | Commander.js CLI structure: 9 commands (login, source, auth, scan, push, install, update, search, init), dual-mode output, config at `~/.skillr/`. |
+| [skill-manifest.md](architecture/skill-manifest.md) | `skill.json` manifest system: single-skill and workspace modes, field schema, resolution logic, backward compatibility with SKILL.md frontmatter. |
 | [backend-api.md](architecture/backend-api.md) | Hono REST API on CF Workers: 7 route groups, D1-only database, R2 storage, per-request initialization middleware, single entry point (`index.ts`). |
 | [auth-and-rbac.md](architecture/auth-and-rbac.md) | Device Code auth, API Key auth (`sk_live_*`), JWT (HS256, 7d), two-layer RBAC, three-tier namespace visibility, PBKDF2 password hashing, audit logging. |
 | [skill-lifecycle.md](architecture/skill-lifecycle.md) | End-to-end skill flow: scan, push (CLI->Backend->R2), install (R2 download proxy->CLI), update, search (CLI/API/MCP dual-mode). |
@@ -41,9 +43,9 @@ Skillr is an enterprise-grade skill aggregation and distribution platform for AI
 
 | Document | Description |
 |----------|-------------|
-| [cli-usage-guide.md](guides/cli-usage-guide.md) | All CLI commands: `skillr login`, source management, auth, scan, push, install, update, search, and JSON output mode. |
+| [cli-usage-guide.md](guides/cli-usage-guide.md) | All CLI commands: `skillr login`, source management, auth, scan, push, install, update, search, init, and JSON output mode. |
 | [authentication-guide.md](guides/authentication-guide.md) | Device Code login, API Keys (create/use/rotate/revoke), machine tokens (SKILLHUB_TOKEN), RBAC roles, namespace members. |
-| [publish-and-install-guide.md](guides/publish-and-install-guide.md) | Creating SKILL.md, publishing (CLI + web), installing, symlink auto-detection, updating, MCP dual-mode (SSE + stdio). |
+| [publish-and-install-guide.md](guides/publish-and-install-guide.md) | Creating skill.json/SKILL.md, publishing (CLI + web, single/workspace modes), installing, symlink auto-detection, updating, MCP dual-mode (SSE + stdio). |
 | [deployment-guide.md](guides/deployment-guide.md) | Cloudflare Workers deployment (D1 + R2 + wrangler), local dev with `wrangler dev`. |
 
 ### reference/ -- Lookup Information
@@ -67,6 +69,7 @@ llmdoc/
     backend-api.md
     auth-and-rbac.md
     skill-lifecycle.md
+    skill-manifest.md
   guides/
     cli-usage-guide.md
     authentication-guide.md

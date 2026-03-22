@@ -7,7 +7,7 @@
 
 ## 2. High-Level Description
 
-Skillr enables developers and AI agents to publish, discover, and install packaged skill directories (`.tar.gz` containing a `SKILL.md` manifest). The system supports multi-registry federation (client-side, similar to Homebrew taps), namespace-based RBAC with three-tier visibility (`public`/`internal`/`private`), OAuth Device Code authentication for humans, API Key system for programmatic access, and environment-variable token injection for machines/agents. A dual-mode CLI outputs human-friendly or machine-parseable (JSON) responses based on TTY detection. Skills can also be published via the web UI at `/skills/publish` for non-technical users. The backend is Cloudflare-First: deployed exclusively on CF Workers with D1 (SQLite) and R2 storage.
+Skillr enables developers and AI agents to publish, discover, and install packaged skill directories (`.tar.gz` containing a `SKILL.md` manifest). Projects are described by a `skill.json` manifest file (similar to `package.json`) supporting single-skill mode (one skill per directory) and workspace mode (multiple skills in subdirectories). Legacy `SKILL.md` frontmatter mode remains supported for backward compatibility. The system supports multi-registry federation (client-side, similar to Homebrew taps), namespace-based RBAC with three-tier visibility (`public`/`internal`/`private`), OAuth Device Code authentication for humans, API Key system for programmatic access, and environment-variable token injection for machines/agents. A dual-mode CLI outputs human-friendly or machine-parseable (JSON) responses based on TTY detection. Skills can also be published via the web UI at `/skills/publish` for non-technical users. The backend is Cloudflare-First: deployed exclusively on CF Workers with D1 (SQLite) and R2 storage.
 
 ## 3. Tech Stack
 
@@ -41,7 +41,7 @@ Frontend (CF Workers Static Assets)  ──rewrite /api/*──>  Backend    AI 
 @skillr/mcp (stdio)  ──HTTP──>  Backend   (standalone MCP for Claude Desktop etc.)
 ```
 
-- **CLI** (`skillr`) is the primary interface for both humans and agents. Handles auth, push, install, search, scan, source management.
+- **CLI** (`skillr`) is the primary interface for both humans and agents. Handles auth, push, install, search, scan, init, source management. Supports `skill.json` manifest for project metadata.
 - **Backend** is a stateless REST API on CF Workers. Stores metadata in D1, artifacts in R2. Issues JWT tokens (HS256, 7-day expiry). Single entry point: `apps/api/src/index.ts` exports the Hono app as default Worker. Per-request initialization middleware sets DB, R2 bucket, and env globals.
 - **Frontend** is a Next.js 15 static export served via CF Workers Static Assets. Dark-themed web UI with web-based skill publishing at `/skills/publish`.
 - **MCP Gateway** dual-mode: (1) built into the backend as SSE endpoints (`/mcp/sse`, `/mcp/message`), (2) standalone `@skillr/mcp` package for stdio transport. Both expose 4 read-only tools.
@@ -53,7 +53,8 @@ Frontend (CF Workers Static Assets)  ──rewrite /api/*──>  Backend    AI 
 |---|---|---|
 | **Registry (Source)** | A backend instance URL. CLI manages multiple sources locally (`~/.skillr/config.json`). Backend has no multi-source awareness. | CLI-side federation |
 | **Namespace** | Organization/team isolation unit (e.g., `@frontend`). RBAC boundary with `maintainer`/`viewer` member roles. Visibility: `public`/`internal`/`private`. | Backend DB (`namespaces` + `ns_members`) |
-| **Skill** | A packaged directory containing `SKILL.md` (YAML frontmatter: `name`, `description`). Physical form: `.tar.gz` stored in R2. | Backend DB (`skills`) + R2 |
+| **Skill** | A packaged directory containing `SKILL.md` (YAML frontmatter: `name`, `description`), optionally described by a `skill.json` manifest with rich metadata (`author`, `license`, `repository`, `agents`, `tags`, `dependencies`). Physical form: `.tar.gz` stored in R2. | Backend DB (`skills`) + R2 |
+| **skill.json** | Project manifest file (like `package.json`). Two modes: single-skill (root `skill.json` + `SKILL.md`) or workspace (`skills` array pointing to subdirectories). Backward-compatible: absent `skill.json` falls back to `SKILL.md` frontmatter. | CLI-side (`packages/cli/src/lib/manifest.ts`) |
 | **Tag** | Version label (e.g., `latest`, `v1.0.0`). Each tag maps to one artifact in R2 with checksum. | Backend DB (`skill_tags`) |
 | **API Key** | Programmatic access credential (`sk_live_<hex>`). Created/revoked/rotated via API. Used for CI/CD and automation. | Backend DB (`api_keys`) |
 
@@ -66,7 +67,7 @@ apps/
   web/        @skillr/web       - CF Workers Static Assets (Next.js static export)
 packages/
   shared/     @skillr/shared    - Domain types, API response types, constants, zero deps
-  cli/        @skillr/cli       - Binary: skillr. 8 commands (login, source, auth, scan, push, install, update, search)
+  cli/        @skillr/cli       - Binary: skillr. 9 commands (login, source, auth, scan, push, install, update, search, init)
   mcp/        @skillr/mcp       - Standalone MCP Server (stdio). 4 read-only tools
 tests/
   e2e/test-full-flow.sh         - Bash E2E script (health, auth, RBAC, skills, CLI)
@@ -83,3 +84,4 @@ tests/
 - **Client-side federation:** Multi-registry is purely a CLI concept. Each backend instance is an independent registry.
 - **API Key system:** Users can create, list, revoke, and rotate API keys (`sk_live_*`) for programmatic access.
 - **`@skillr/shared` must build first:** All CI and dev workflows enforce shared-first build order.
+- **`skill.json` manifest:** Provides structured project metadata (like `package.json`). Supports single-skill and workspace modes. `version` field auto-maps to publish tag. Backward-compatible with SKILL.md-only projects.

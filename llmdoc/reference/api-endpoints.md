@@ -48,7 +48,7 @@ The Skillr backend exposes a REST API via Hono on Cloudflare Workers at 7 route 
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/skills` | None | Search/list skills. Query: `q`, `namespace`, `page`, `limit`. |
+| GET | `/api/skills` | None | Search/list skills. Query: `q`, `namespace`, `page`, `limit`, `agent`, `tag`. |
 | GET | `/api/skills/:ns/:name` | None | Get skill detail with readme, tags, downloads. |
 | GET | `/api/skills/:ns/:name/tags` | None | List all tags for a skill. |
 | GET | `/api/skills/:ns/:name/tags/:tag` | None | Get tag detail with download URL. Increments downloads. |

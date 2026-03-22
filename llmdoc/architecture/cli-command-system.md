@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-- **What it is:** The `skillr` CLI built on Commander.js v13, providing 8 top-level commands for skill registry operations.
+- **What it is:** The `skillr` CLI built on Commander.js v13, providing 9 top-level commands for skill registry operations.
 - **Purpose:** Enables developers and AI agents to manage skill sources, authenticate, scan/push/install/search skills from the terminal.
 
 ## 2. Core Components
@@ -11,14 +11,16 @@
 - `packages/cli/src/lib/config.ts` (`loadConfig`, `saveConfig`, `getAuthToken`, `getDefaultSource`, `getConfigDir`): Config management at `~/.skillr/config.json`. Atomic writes via rename-from-temp. Token resolution: `SKILLHUB_TOKEN` env > `config.auth[url].token`.
 - `packages/cli/src/lib/output.ts` (`OutputAdapter`, `TtyOutput`, `JsonOutput`, `createOutput`): Dual-mode output abstraction. `createOutput()` selects `JsonOutput` when `--json` flag is set OR `!process.stdout.isTTY`; otherwise `TtyOutput`.
 - `packages/cli/src/lib/registry-client.ts` (`RegistryClient`): HTTP client over native `fetch`. Shared `request<T>()` for JSON endpoints; `pushSkill()` bypasses it for multipart/form-data.
+- `packages/cli/src/lib/manifest.ts` (`loadManifest`): Loads and validates `skill.json` from a directory. Returns `SkillManifest | null`. Validates required fields per mode (single vs workspace), namespace format regex.
 - `packages/cli/src/lib/symlink.ts` (`detectAgentEnv`, `getSymlinkTarget`, `createSkillSymlink`): Detects `.claude/` or `.agents/` dirs to determine agent environment, creates symlinks from cache into agent skill directories.
 - `packages/cli/src/commands/login.ts` (`registerLoginCommand`): Top-level `skillr login <url>` -- adds source and authenticates in one step. No default source URL.
 - `packages/cli/src/commands/source.ts` (`registerSourceCommands`): `source list|add|remove|set-default` -- purely local config, no `RegistryClient`.
 - `packages/cli/src/commands/auth.ts` (`registerAuthCommands`, `loginFlow`): `auth login|logout|whoami|status` -- OAuth 2.0 Device Code flow with configurable poll interval.
-- `packages/cli/src/commands/scan.ts` (`registerScanCommand`, `scanDirectory`): `scan [dir]` -- finds `SKILL.md` files via `fast-glob`, validates YAML frontmatter.
-- `packages/cli/src/commands/push.ts` (`registerPushCommand`, `pushSkill`): `push <ref>` -- packs CWD as tarball, computes sha256, uploads via `RegistryClient.pushSkill`.
+- `packages/cli/src/commands/scan.ts` (`registerScanCommand`, `scanDirectory`): `scan [dir]` -- prioritizes `skill.json` detection (workspace: validates each entry's SKILL.md; single: validates root); falls back to `fast-glob` SKILL.md traversal.
+- `packages/cli/src/commands/push.ts` (`registerPushCommand`, `pushSkill`): `push [ref]` -- three modes: workspace (pushes all skills from `skill.json.skills`), single (`skill.json` name/namespace), legacy (`SKILL.md` frontmatter). Supports `files.include/exclude` filtering from manifest.
 - `packages/cli/src/commands/install.ts` (`registerInstallCommand`, `registerUpdateCommand`, `installSkill`): `install <ref>` and `update [ref]` -- downloads, verifies checksum, extracts to cache, symlinks, records in `installed.json`.
-- `packages/cli/src/commands/search.ts` (`registerSearchCommand`, `searchSkills`): `search <query>` -- calls `RegistryClient.searchSkills`, renders results table.
+- `packages/cli/src/commands/search.ts` (`registerSearchCommand`, `searchSkills`): `search <query>` -- calls `RegistryClient.searchSkills`, renders results table. Supports `--agent` and `--tag` filter options.
+- `packages/cli/src/commands/init.ts` (`registerInitCommand`): `init` -- scaffolds a new skill project. Options: `--workspace` (multi-skill), `--name`, `--namespace`. Creates `skill.json` and template `SKILL.md`.
 
 ## 3. Execution Flow (LLM Retrieval Map)
 

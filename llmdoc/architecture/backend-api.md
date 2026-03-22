@@ -22,7 +22,9 @@
 - `apps/api/src/routes/mcp.ts` (`mcpRoutes`): Built-in MCP SSE endpoints.
 - `apps/api/src/routes/health.ts` (`healthRoutes`): Health check probing DB and R2 connectivity.
 - `apps/api/src/services/auth.service.ts`: User registration, authentication, Device Code lifecycle. Uses `password.ts` directly.
-- `apps/api/src/services/skill.service.ts`: Skill upsert, query, search (`like` for SQLite), delete, download counting. Uses `storage.ts` directly.
+- `apps/api/src/services/skill.service.ts`: Skill upsert (including `author`, `license`, `repository`, `agents`, `searchTags`, `dependencies`), query, search (`like` for SQLite, `agentFilter`, `tagFilter`), delete, download counting. Auto-syncs `latest` tag on versioned publish. Uses `storage.ts` directly.
+- `apps/api/src/lib/tar.ts`: Workers-side pure JS tar.gz packing for web-based publishing.
+- `apps/api/migrations/0001-skill-metadata.sql`: D1 migration adding `author`, `license`, `repository`, `agents`, `search_tags` columns to `skills` table.
 - `apps/api/src/services/apikey.service.ts`: API key creation (sha256 hash stored), validation, rotation, revocation.
 - `apps/api/src/services/audit.service.ts` (`logAuditEvent`, `queryAuditLogs`): Fire-and-forget audit log writes; query with filters.
 - `apps/api/wrangler.toml`: Worker configuration. Bindings: `DB` (D1), `ARTIFACTS` (R2), `JWT_SECRET` (secret), `FRONTEND_URL` (var).
