@@ -55,7 +55,7 @@ skillr install my-deploy-helper
 skillr install @my-namespace/my-deploy-helper -t v1.0.0
 ```
 
-The CLI downloads from a presigned S3/R2 URL, verifies checksum, extracts to `~/.skillr/cache/<ns>/<name>/`, and records in `~/.skillr/installed.json`.
+The CLI downloads from the R2 download proxy (`/api/skills/download/:key`), verifies checksum, extracts to `~/.skillr/cache/<ns>/<name>/`, and records in `~/.skillr/installed.json`.
 
 ## 4. Symlink Auto-Detection
 
@@ -95,7 +95,7 @@ The backend includes MCP endpoints at `/mcp/sse`. Configure your AI agent:
   "mcpServers": {
     "skillr": {
       "type": "sse",
-      "url": "http://localhost:3001/mcp/sse"
+      "url": "https://api.skillhub.tokenroll.ai/mcp/sse"
     }
   }
 }
@@ -111,7 +111,7 @@ For Claude Desktop or tools requiring a process-based MCP server:
       "command": "npx",
       "args": ["@skillr/mcp"],
       "env": {
-        "SKILLHUB_BACKEND_URL": "http://localhost:3001",
+        "SKILLHUB_BACKEND_URL": "https://api.skillhub.tokenroll.ai",
         "SKILLHUB_TOKEN": "sk_live_xxx"
       }
     }

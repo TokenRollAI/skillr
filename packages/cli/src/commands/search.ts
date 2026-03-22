@@ -9,6 +9,7 @@ export async function searchSkills(
   limit: number,
   output: OutputAdapter,
   configDir?: string,
+  opts?: { agent?: string; tag?: string },
 ): Promise<void> {
   const config = await loadConfig(configDir);
   const source = getDefaultSource(config);
@@ -22,7 +23,7 @@ export async function searchSkills(
   const client = new RegistryClient(source.url, token);
 
   try {
-    const results = await client.searchSkills(query, namespace, limit);
+    const results = await client.searchSkills(query, namespace, limit, { agent: opts?.agent, tag: opts?.tag });
     if (results.length === 0) {
       output.info('No skills found.');
       return;
@@ -50,8 +51,10 @@ export function registerSearchCommand(program: Command): void {
     .argument('<query>', 'Search query')
     .option('-n, --namespace <namespace>', 'Filter by namespace')
     .option('-l, --limit <limit>', 'Max results', '20')
-    .action(async (query: string, opts: { namespace?: string; limit: string }) => {
+    .option('--agent <agent>', 'Filter by compatible agent (e.g., claude-code)')
+    .option('--tag <tag>', 'Filter by search tag')
+    .action(async (query: string, opts: { namespace?: string; limit: string; agent?: string; tag?: string }) => {
       const output = createOutput({ json: program.opts().json });
-      await searchSkills(query, opts.namespace, parseInt(opts.limit), output);
+      await searchSkills(query, opts.namespace, parseInt(opts.limit), output, undefined, { agent: opts.agent, tag: opts.tag });
     });
 }

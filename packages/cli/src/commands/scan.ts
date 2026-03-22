@@ -28,6 +28,67 @@ const IGNORE_DIRS = [
 const REQUIRED_FIELDS = ['name', 'description'];
 
 export async function scanDirectory(directory: string): Promise<ScannedSkill[]> {
+  // Check for skill.json first
+  const { loadManifest } = await import('../lib/manifest.js');
+  try {
+    const manifest = await loadManifest(directory);
+    if (manifest?.skills) {
+      // Workspace mode: validate each skill entry
+      const results: ScannedSkill[] = [];
+      for (const entry of manifest.skills) {
+        const skillDir = join(directory, entry.path);
+        const skillMdPath = join(skillDir, 'SKILL.md');
+        const errors: string[] = [];
+
+        try {
+          const content = await readFile(skillMdPath, 'utf-8');
+          const { data: frontmatter } = matter(content);
+          // Validate SKILL.md has required fields or skill.json entry provides them
+          if (!entry.name && !frontmatter.name) errors.push('Missing required field: name');
+          if (!entry.description && !frontmatter.description) errors.push('Missing required field: description');
+        } catch {
+          errors.push('SKILL.md not found in ' + entry.path);
+        }
+
+        results.push({
+          path: join(entry.path, 'SKILL.md'),
+          directory: entry.path,
+          name: entry.name,
+          description: entry.description,
+          version: manifest.version,
+          errors,
+          valid: errors.length === 0,
+        });
+      }
+      return results;
+    }
+    if (manifest) {
+      // Single-skill mode: validate root
+      const skillMdPath = join(directory, 'SKILL.md');
+      const errors: string[] = [];
+      let frontmatter: Record<string, any> = {};
+      try {
+        const content = await readFile(skillMdPath, 'utf-8');
+        frontmatter = matter(content).data;
+      } catch {
+        errors.push('SKILL.md not found');
+      }
+
+      return [{
+        path: 'SKILL.md',
+        directory: '.',
+        name: manifest.name,
+        description: manifest.description,
+        version: manifest.version,
+        errors,
+        valid: errors.length === 0,
+      }];
+    }
+  } catch (err: any) {
+    return [{ path: 'skill.json', directory: '.', errors: [err.message], valid: false }];
+  }
+
+  // Legacy: scan for SKILL.md files (existing code below)
   const pattern = join(directory, '**/SKILL.md');
   const files = await fg(pattern, { ignore: IGNORE_DIRS, absolute: true });
 

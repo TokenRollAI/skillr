@@ -91,10 +91,12 @@ export class RegistryClient {
     return this.request(`/api/skills/${namespace}/${name}/tags/${tag}`);
   }
 
-  async searchSkills(query: string, namespace?: string, limit?: number): Promise<any[]> {
+  async searchSkills(query: string, namespace?: string, limit?: number, opts?: { agent?: string; tag?: string }): Promise<any[]> {
     const params = new URLSearchParams({ q: query });
     if (namespace) params.set('namespace', namespace);
     if (limit) params.set('limit', String(limit));
+    if (opts?.agent) params.set('agent', opts.agent);
+    if (opts?.tag) params.set('tag', opts.tag);
     return this.request(`/api/skills?${params}`);
   }
 }

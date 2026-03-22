@@ -2,148 +2,128 @@
 
 ## 1. Core Summary
 
-Skillr uses 8 tables managed via drizzle-orm. Supports dual database backends: PostgreSQL (Node.js deployment, UUID PKs with `defaultRandom()`, `timestamptz`) and Cloudflare D1 (SQLite, text PKs with UUID generation, `text` timestamps). The schema supports a multi-tenant namespace model with RBAC, versioned skill artifacts, OAuth Device Code flow, API Key authentication, and audit logging.
+Skillr uses 8 tables managed via drizzle-orm with SQLite (Cloudflare D1). All tables use `sqliteTable` from `drizzle-orm/sqlite-core`. PKs are `text` with `$defaultFn(() => crypto.randomUUID())`. Timestamps are `text` with ISO 8601 strings. JSON fields use `text({ mode: 'json' })`. The schema supports a multi-tenant namespace model with RBAC, versioned skill artifacts, OAuth Device Code flow, API Key authentication, and audit logging.
 
 ## 2. Source of Truth
 
-- **Schema models (runtime):** `packages/backend/src/models/schema.ts` -- re-exports from individual model files.
-- **Drizzle migration schema:** `packages/backend/src/models/drizzle-schema.ts` -- combined schema for `drizzle-kit`.
-- **Initial migration SQL:** `packages/backend/drizzle/0000_motionless_morbius.sql`
-- **D1 migration SQL:** `packages/backend/d1-migration.sql`
+- **Schema models (runtime):** `apps/api/src/models/schema.ts` -- re-exports from individual model files.
+- **Individual model files:** `apps/api/src/models/user.ts`, `namespace.ts`, `skill.ts`, `device-code.ts`, `api-key.ts`, `audit-log.ts`
+- **D1 migration SQL:** `apps/api/d1-migration.sql`
 - **Related Architecture:** `/llmdoc/architecture/backend-api.md`
 
 ## 3. Tables
 
-### users (`packages/backend/src/models/user.ts`)
+### users (`apps/api/src/models/user.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| username | varchar(64) | UNIQUE, NOT NULL |
-| email | varchar(255) | UNIQUE, NOT NULL |
-| password_hash | varchar(255) | nullable |
-| role | varchar(20) | NOT NULL, default `'viewer'` |
-| created_at | timestamptz | NOT NULL, defaultNow |
-| updated_at | timestamptz | NOT NULL, defaultNow |
+| id | text | PK, crypto.randomUUID() |
+| username | text | UNIQUE, NOT NULL |
+| email | text | UNIQUE, NOT NULL |
+| password_hash | text | nullable |
+| role | text | NOT NULL, default `'viewer'` |
+| created_at | text | NOT NULL, ISO 8601 |
+| updated_at | text | NOT NULL, ISO 8601 |
 
-### namespaces (`packages/backend/src/models/namespace.ts`)
+### namespaces (`apps/api/src/models/namespace.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| name | varchar(64) | UNIQUE, NOT NULL |
+| id | text | PK, crypto.randomUUID() |
+| name | text | UNIQUE, NOT NULL |
 | description | text | nullable |
-| visibility | varchar(20) | NOT NULL, default `'internal'` |
-| created_at | timestamptz | NOT NULL, defaultNow |
-| updated_at | timestamptz | NOT NULL, defaultNow |
+| visibility | text | NOT NULL, default `'internal'` |
+| created_at | text | NOT NULL, ISO 8601 |
+| updated_at | text | NOT NULL, ISO 8601 |
 
-**Visibility values:** `public`, `internal`, `private`. Public = visible to all; Internal = visible to authenticated users; Private = visible only to members and admins.
-
-### ns_members (`packages/backend/src/models/namespace.ts`)
+### ns_members (`apps/api/src/models/namespace.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| user_id | uuid | PK (composite), FK -> users(cascade) |
-| namespace_id | uuid | PK (composite), FK -> namespaces(cascade) |
-| role | varchar(20) | NOT NULL, default `'viewer'` |
-| created_at | timestamptz | NOT NULL, defaultNow |
+| user_id | text | PK (composite), FK -> users |
+| namespace_id | text | PK (composite), FK -> namespaces |
+| role | text | NOT NULL, default `'viewer'` |
+| created_at | text | NOT NULL, ISO 8601 |
 
-### skills (`packages/backend/src/models/skill.ts`)
+### skills (`apps/api/src/models/skill.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| namespace_id | uuid | NOT NULL, FK -> namespaces |
-| name | varchar(128) | NOT NULL |
+| id | text | PK, crypto.randomUUID() |
+| namespace_id | text | NOT NULL, FK -> namespaces |
+| name | text | NOT NULL |
 | description | text | nullable |
-| latest_tag | varchar(64) | default `'latest'` |
+| latest_tag | text | default `'latest'` |
 | readme | text | nullable |
-| dependencies | jsonb | default `{}` |
+| dependencies | text (json) | default `{}` |
 | downloads | integer | NOT NULL, default `0` |
-| created_at | timestamptz | NOT NULL, defaultNow |
-| updated_at | timestamptz | NOT NULL, defaultNow |
+| created_at | text | NOT NULL, ISO 8601 |
+| updated_at | text | NOT NULL, ISO 8601 |
 
 **Indexes:** `skills_ns_name_unique` UNIQUE(namespace_id, name), `idx_skills_namespace` (namespace_id)
 
-### skill_tags (`packages/backend/src/models/skill.ts`)
+### skill_tags (`apps/api/src/models/skill.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| skill_id | uuid | NOT NULL, FK -> skills(cascade) |
-| tag | varchar(64) | NOT NULL |
-| artifact_key | varchar(512) | NOT NULL |
-| size_bytes | bigint | NOT NULL |
-| checksum | varchar(128) | NOT NULL |
-| metadata | jsonb | default `{}` |
-| published_by | uuid | nullable, FK -> users |
-| created_at | timestamptz | NOT NULL, defaultNow |
+| id | text | PK, crypto.randomUUID() |
+| skill_id | text | NOT NULL, FK -> skills(cascade) |
+| tag | text | NOT NULL |
+| artifact_key | text | NOT NULL |
+| size_bytes | integer | NOT NULL |
+| checksum | text | NOT NULL |
+| metadata | text (json) | default `{}` |
+| published_by | text | nullable, FK -> users |
+| created_at | text | NOT NULL, ISO 8601 |
 
 **Indexes:** `skill_tags_skill_tag_unique` UNIQUE(skill_id, tag), `idx_skill_tags_skill` (skill_id)
 
-### device_codes (`packages/backend/src/models/device-code.ts`)
+### device_codes (`apps/api/src/models/device-code.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| device_code | varchar(128) | UNIQUE, NOT NULL |
-| user_code | varchar(16) | UNIQUE, NOT NULL |
-| user_id | uuid | nullable, FK -> users |
-| status | varchar(20) | NOT NULL, default `'pending'` |
-| expires_at | timestamptz | NOT NULL |
-| created_at | timestamptz | NOT NULL, defaultNow |
+| id | text | PK, crypto.randomUUID() |
+| device_code | text | UNIQUE, NOT NULL |
+| user_code | text | UNIQUE, NOT NULL |
+| user_id | text | nullable, FK -> users |
+| status | text | NOT NULL, default `'pending'` |
+| expires_at | text | NOT NULL |
+| created_at | text | NOT NULL, ISO 8601 |
 
-**Status values:** `pending` -> `approved` -> `used`
-
-### api_keys (`packages/backend/src/models/api-key.ts`)
+### api_keys (`apps/api/src/models/api-key.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| user_id | uuid | NOT NULL, FK -> users(cascade) |
-| name | varchar(128) | NOT NULL |
-| prefix | varchar(20) | NOT NULL |
-| key_hash | varchar(128) | NOT NULL |
-| scopes | jsonb | nullable |
-| last_used_at | timestamptz | nullable |
-| expires_at | timestamptz | nullable |
-| revoked | boolean | NOT NULL, default `false` |
-| created_at | timestamptz | NOT NULL, defaultNow |
-| updated_at | timestamptz | NOT NULL, defaultNow |
+| id | text | PK, crypto.randomUUID() |
+| user_id | text | NOT NULL, FK -> users(cascade) |
+| name | text | NOT NULL |
+| prefix | text | NOT NULL |
+| key_hash | text | NOT NULL |
+| scopes | text (json) | nullable |
+| last_used_at | text | nullable |
+| expires_at | text | nullable |
+| revoked | integer (boolean) | NOT NULL, default `false` |
+| created_at | text | NOT NULL, ISO 8601 |
+| updated_at | text | NOT NULL, ISO 8601 |
 
-**Key format:** `sk_live_<32-byte-hex>`. Only the SHA-256 hash is stored; the prefix field stores `sk_live_<first8>` for lookup.
-
-### audit_logs (`packages/backend/src/models/audit-log.ts`)
+### audit_logs (`apps/api/src/models/audit-log.ts`)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | uuid | PK, defaultRandom |
-| user_id | uuid | nullable, FK -> users |
-| action | varchar(64) | NOT NULL |
-| resource | varchar(255) | nullable |
-| details | jsonb | nullable |
-| ip_address | varchar(45) | nullable |
+| id | text | PK, crypto.randomUUID() |
+| user_id | text | nullable, FK -> users |
+| action | text | NOT NULL |
+| resource | text | nullable |
+| details | text (json) | nullable |
+| ip_address | text | nullable |
 | user_agent | text | nullable |
-| created_at | timestamptz | NOT NULL, defaultNow |
-
-**Indexes:** `idx_audit_user` (user_id), `idx_audit_action` (action), `idx_audit_time` (created_at)
+| created_at | text | NOT NULL, ISO 8601 |
 
 ## 4. Key Relationships
 
-- `ns_members.user_id` -> `users.id` (cascade delete)
-- `ns_members.namespace_id` -> `namespaces.id` (cascade delete)
-- `skills.namespace_id` -> `namespaces.id` (no cascade)
-- `skill_tags.skill_id` -> `skills.id` (cascade delete)
-- `skill_tags.published_by` -> `users.id` (no cascade)
-- `device_codes.user_id` -> `users.id` (no cascade)
-- `api_keys.user_id` -> `users.id` (cascade delete)
-- `audit_logs.user_id` -> `users.id` (no cascade)
-
-## 5. D1 (SQLite) Compatibility
-
-When deployed on Cloudflare Workers with D1:
-- UUID columns use `text` type with application-level UUID generation.
-- `timestamptz` maps to `text` (ISO 8601 strings).
-- `jsonb` maps to `text` (JSON serialized).
-- `bigint` maps to `integer`.
-- Migration file: `packages/backend/d1-migration.sql`.
+- `ns_members.user_id` -> `users.id`, `ns_members.namespace_id` -> `namespaces.id`
+- `skills.namespace_id` -> `namespaces.id`
+- `skill_tags.skill_id` -> `skills.id` (cascade), `skill_tags.published_by` -> `users.id`
+- `device_codes.user_id` -> `users.id`
+- `api_keys.user_id` -> `users.id` (cascade)
+- `audit_logs.user_id` -> `users.id`

@@ -4,13 +4,12 @@ This document provides a summary of the project's branching strategy, commit con
 
 ## 1. Core Summary
 
-Skillr uses a single `main` branch as the integration target. CI runs on every push to `main` and on every pull request targeting `main`. The pipeline enforces typecheck, unit tests, full build, and Docker validation before merge.
+Skillr uses a single `main` branch as the integration target. CI runs on every push to `main` and on every pull request targeting `main`. The pipeline enforces typecheck, unit tests, and full build before merge. No Docker validation (Docker support has been removed).
 
 ## 2. Branch Strategy
 
 - **Primary branch:** `main`
 - **PR workflow:** Feature branches are merged into `main` via pull requests. CI must pass before merge.
-- **No long-lived secondary branches** are observed in the repository history.
 
 ## 3. Commit Message Format
 
@@ -22,17 +21,17 @@ Defined in `.github/workflows/ci.yml`. Triggers: `push` to `main`, `pull_request
 
 | Job                  | Depends On                         | Key Steps                                                        |
 | -------------------- | ---------------------------------- | ---------------------------------------------------------------- |
-| `lint-and-typecheck` | --                                 | `pnpm install`, build `@skillr/shared`, typecheck backend, cli   |
-| `unit-test`          | --                                 | `pnpm install`, build `@skillr/shared`, test cli, test mcp       |
-| `build`              | `lint-and-typecheck`, `unit-test`  | Build all packages: shared, backend, cli, mcp, frontend          |
-| `docker`             | `build`                            | Validate `docker compose -f docker/docker-compose.yml config`    |
+| `lint-and-typecheck` | --                                 | `pnpm install`, build `@skillr/shared`, typecheck `@skillr/api`, `@skillr/cli`   |
+| `unit-test`          | --                                 | `pnpm install`, build `@skillr/shared`, test `@skillr/cli`, `@skillr/mcp`       |
+| `build`              | `lint-and-typecheck`, `unit-test`  | Build: shared, cli, mcp, web          |
 
-**Execution order:** `lint-and-typecheck` and `unit-test` run in parallel, then `build`, then `docker`.
+**Execution order:** `lint-and-typecheck` and `unit-test` run in parallel, then `build`.
 
 **Toolchain:** pnpm 10, Node.js 22, `--frozen-lockfile` enforced.
 
 ## 5. Source of Truth
 
 - **CI Workflow:** `.github/workflows/ci.yml` -- Full pipeline definition.
-- **Root Scripts:** `package.json` (`dev:infra`, `build`, `test`, `typecheck`) -- Monorepo-level commands.
-- **Docker Config:** `docker/docker-compose.yml`, `docker/Dockerfile.backend`, `docker/Dockerfile.frontend`.
+- **Root Scripts:** `package.json` -- Monorepo-level commands.
+- **Backend Config:** `apps/api/wrangler.toml` -- Worker deployment configuration.
+- **Frontend Config:** `apps/web/wrangler.toml` -- Workers Static Assets configuration.

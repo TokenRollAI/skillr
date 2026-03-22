@@ -3,26 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "up": "docker compose -f docker/docker-compose.yml up -d --build",
-    "down": "docker compose -f docker/docker-compose.yml down",
-    "down:clean": "docker compose -f docker/docker-compose.yml down -v",
-    "logs": "docker compose -f docker/docker-compose.yml logs -f",
-    "logs:backend": "docker compose -f docker/docker-compose.yml logs -f backend",
-    "dev:infra": "docker compose -f docker/docker-compose.yml up -d postgres minio minio-init",
-    "dev:infra:down": "docker compose -f docker/docker-compose.yml down -v",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "test:e2e": "bash tests/e2e/test-full-flow.sh",
-    "test:docker": "bash tests/e2e/test-docker-startup.sh",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "dev:api": "cd apps/api && wrangler dev",
+    "dev:web": "cd apps/web && next dev --port 3000",
+    "deploy:api": "cd apps/api && wrangler deploy",
+    "deploy:web": "cd apps/web && wrangler deploy"
   },
   "engines": {
     "node": ">=18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "argon2"
-    ]
   }
 }

@@ -9,3 +9,5 @@ coverage/
 .next/
 out/
 *.png
+.wrangler/
+.dev.vars

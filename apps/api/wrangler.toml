@@ -1,0 +1,21 @@
+name = "skillr-api"
+main = "src/index.ts"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "0cb9b897010bc426cd8bf33d8c052d11"
+
+workers_dev = true
+
+# Custom domain is managed via `wrangler deploy` with route or CF Dashboard > Workers > Custom Domains
+
+[vars]
+FRONTEND_URL = "https://skillhub.tokenroll.ai"
+
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "skillr-artifacts"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "skillr-db"
+database_id = "58b7e964-0a9a-42a6-8b02-509e89c0ee3e"

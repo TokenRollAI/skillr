@@ -1,0 +1,144 @@
+import { eq, and } from 'drizzle-orm';
+import { getDb } from '../db.js';
+import { apiKeys } from '../models/schema.js';
+import { users } from '../models/schema.js';
+
+function generateRandomHex(bytes: number): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256(data: string): Promise<string> {
+  const encoded = new TextEncoder().encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateApiKey(): Promise<{ fullKey: string; prefix: string; keyHash: string }> {
+  const random = generateRandomHex(32);
+  const fullKey = `sk_live_${random}`;
+  const prefix = `sk_live_${random.slice(0, 4)}...`;
+  const keyHash = await sha256(fullKey);
+  return { fullKey, prefix, keyHash };
+}
+
+export async function createApiKey(
+  userId: string,
+  name: string,
+  scopes: string[] = ['read'],
+  expiresAt?: Date,
+) {
+  const db = getDb();
+  const { fullKey, prefix, keyHash } = await generateApiKey();
+
+  const now = new Date().toISOString();
+  const [record] = await db.insert(apiKeys).values({
+    userId,
+    name,
+    prefix,
+    keyHash,
+    scopes,
+    expiresAt: expiresAt?.toISOString() ?? null,
+    createdAt: now,
+    updatedAt: now,
+  }).returning();
+
+  return {
+    id: record!.id,
+    name: record!.name,
+    key: fullKey,
+    prefix: record!.prefix,
+    scopes: record!.scopes,
+    expiresAt: record!.expiresAt,
+    createdAt: record!.createdAt,
+  };
+}
+
+export async function listApiKeys(userId: string) {
+  const db = getDb();
+  return db.select({
+    id: apiKeys.id,
+    name: apiKeys.name,
+    prefix: apiKeys.prefix,
+    scopes: apiKeys.scopes,
+    lastUsedAt: apiKeys.lastUsedAt,
+    expiresAt: apiKeys.expiresAt,
+    revoked: apiKeys.revoked,
+    createdAt: apiKeys.createdAt,
+  }).from(apiKeys)
+    .where(eq(apiKeys.userId, userId))
+    .orderBy(apiKeys.createdAt);
+}
+
+export async function getApiKey(id: string, userId: string) {
+  const db = getDb();
+  const [record] = await db.select().from(apiKeys)
+    .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, userId)))
+    .limit(1);
+  return record ?? null;
+}
+
+export async function revokeApiKey(id: string, userId: string): Promise<boolean> {
+  const db = getDb();
+  const result = await db.update(apiKeys)
+    .set({ revoked: true, updatedAt: new Date().toISOString() })
+    .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, userId)))
+    .returning();
+  return result.length > 0;
+}
+
+export async function rotateApiKey(id: string, userId: string) {
+  const db = getDb();
+  const existing = await getApiKey(id, userId);
+  if (!existing) return null;
+
+  await revokeApiKey(id, userId);
+
+  return createApiKey(
+    userId,
+    existing.name,
+    existing.scopes as string[],
+    existing.expiresAt ? new Date(existing.expiresAt) : undefined,
+  );
+}
+
+export async function validateApiKey(fullKey: string) {
+  const db = getDb();
+  const keyHash = await sha256(fullKey);
+
+  const [record] = await db.select({
+    id: apiKeys.id,
+    userId: apiKeys.userId,
+    revoked: apiKeys.revoked,
+    expiresAt: apiKeys.expiresAt,
+    scopes: apiKeys.scopes,
+  }).from(apiKeys)
+    .where(eq(apiKeys.keyHash, keyHash))
+    .limit(1);
+
+  if (!record) return null;
+  if (record.revoked) return null;
+  if (record.expiresAt && new Date(record.expiresAt) < new Date()) return null;
+
+  await db.update(apiKeys)
+    .set({ lastUsedAt: new Date().toISOString() })
+    .where(eq(apiKeys.id, record.id));
+
+  const [user] = await db.select({
+    id: users.id,
+    username: users.username,
+    role: users.role,
+  }).from(users)
+    .where(eq(users.id, record.userId))
+    .limit(1);
+
+  if (!user) return null;
+
+  return {
+    sub: user.id,
+    username: user.username,
+    role: user.role,
+    scopes: record.scopes,
+  };
+}

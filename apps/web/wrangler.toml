@@ -1,0 +1,11 @@
+name = "skillr-web"
+compatibility_date = "2025-12-01"
+account_id = "0cb9b897010bc426cd8bf33d8c052d11"
+
+workers_dev = true
+
+# Custom domain is managed via CF Dashboard > Workers > Custom Domains
+
+# Serve Next.js static export from out/ directory
+[assets]
+directory = "out"

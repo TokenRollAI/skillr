@@ -46,10 +46,10 @@
     "commander": "^13.0.0",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",
-    "tar": "^7.5.11"
+    "tar": "^7.5.11",
+    "@skillr/shared": "workspace:*"
   },
   "devDependencies": {
-    "@skillr/shared": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/tar": "^7.0.87",
     "tsup": "^8.0.0",

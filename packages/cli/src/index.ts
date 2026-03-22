@@ -5,6 +5,7 @@ import { registerScanCommand } from './commands/scan.js';
 import { registerPushCommand } from './commands/push.js';
 import { registerInstallCommand, registerUpdateCommand } from './commands/install.js';
 import { registerSearchCommand } from './commands/search.js';
+import { registerInitCommand } from './commands/init.js';
 import { createOutput } from './lib/output.js';
 
 const program = new Command();
@@ -32,5 +33,6 @@ registerPushCommand(program);
 registerInstallCommand(program);
 registerUpdateCommand(program);
 registerSearchCommand(program);
+registerInitCommand(program);
 
 program.parse();
