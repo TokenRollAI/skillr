@@ -217,10 +217,12 @@ export async function searchSkills(query: string, namespace?: string, page = 1, 
     if (ns) conditions.push(eq(skills.namespaceId, ns.id));
   }
   if (agentFilter) {
-    conditions.push(like(skills.agents, `%"${agentFilter}"%`));
+    const safe = agentFilter.replace(/[%_]/g, '');
+    conditions.push(like(skills.agents, `%"${safe}"%`));
   }
   if (tagFilter) {
-    conditions.push(like(skills.searchTags, `%"${tagFilter}"%`));
+    const safe = tagFilter.replace(/[%_]/g, '');
+    conditions.push(like(skills.searchTags, `%"${safe}"%`));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -236,10 +238,6 @@ export async function searchSkills(query: string, namespace?: string, page = 1, 
     .offset(offset);
 
   return results;
-}
-
-export async function listSkills(page = 1, limit = 20, namespace?: string, userId?: string, agentFilter?: string, tagFilter?: string) {
-  return searchSkills('', namespace, page, limit, userId, agentFilter, tagFilter);
 }
 
 export async function deleteSkill(namespaceName: string, skillName: string) {

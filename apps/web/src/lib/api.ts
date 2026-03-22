@@ -1,7 +1,11 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

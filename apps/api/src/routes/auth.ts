@@ -1,10 +1,14 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import type { AppEnv } from '../env.js';
 import { requireAuth } from '../middleware/auth.js';
 import * as authService from '../services/auth.service.js';
 import { getFrontendUrl } from '../env.js';
 import { logAuditEvent } from '../services/audit.service.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
+import { getDb } from '../db.js';
+import { users } from '../models/schema.js';
 
 const registerSchema = z.object({
   username: z.string().min(3).max(64).regex(/^[a-zA-Z0-9_-]+$/),
@@ -21,7 +25,7 @@ const deviceTokenSchema = z.object({
   grant_type: z.string(),
 });
 
-export const authRoutes = new Hono();
+export const authRoutes = new Hono<AppEnv>();
 
 authRoutes.post('/register', async (c) => {
   const body = await c.req.json();
@@ -65,7 +69,7 @@ authRoutes.post('/device/approve', requireAuth, async (c) => {
     return c.json({ error: 'Invalid user_code format' }, 400);
   }
 
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const result = await authService.approveDeviceCode(parsed.data.user_code, user.sub);
 
   if ('error' in result) {
@@ -130,14 +134,14 @@ authRoutes.post('/login', async (c) => {
 });
 
 authRoutes.get('/me', requireAuth, async (c) => {
-  const jwtUser = c.get('user' as never) as { sub: string };
+  const jwtUser = c.get('user');
   const user = await authService.getUserById(jwtUser.sub);
   if (!user) return c.json({ error: 'User not found' }, 404);
   return c.json(user);
 });
 
 authRoutes.put('/password', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const body = await c.req.json();
   const schema = z.object({
     currentPassword: z.string().min(1),
@@ -149,9 +153,7 @@ authRoutes.put('/password', requireAuth, async (c) => {
   const authResult = await authService.getUserById(user.sub);
   if (!authResult) return c.json({ error: 'User not found' }, 404);
 
-  const db = (await import('../db.js')).getDb();
-  const { users } = await import('../models/schema.js');
-  const { eq } = await import('drizzle-orm');
+  const db = getDb();
   const [fullUser] = await db.select().from(users).where(eq(users.id, user.sub)).limit(1);
   if (!fullUser?.passwordHash) return c.json({ error: 'Cannot change password' }, 400);
 

@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 function SkillsContent() {
   const searchParams = useSearchParams();

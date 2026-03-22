@@ -56,4 +56,25 @@ describe('loadManifest', () => {
     await writeFile(join(dir, 'skill.json'), JSON.stringify({ name: 'test' }));
     await expect(loadManifest(dir)).rejects.toThrow('description');
   });
+
+  it('throws on malformed JSON', async () => {
+    await writeFile(join(dir, 'skill.json'), '{ invalid json }');
+    await expect(loadManifest(dir)).rejects.toThrow('invalid JSON');
+  });
+
+  it('throws when workspace skill entry missing description', async () => {
+    await writeFile(join(dir, 'skill.json'), JSON.stringify({
+      name: '@test/skills',
+      skills: [{ path: 'skills/foo', name: 'foo' }],
+    }));
+    await expect(loadManifest(dir)).rejects.toThrow('description');
+  });
+
+  it('throws when workspace skill entry missing path', async () => {
+    await writeFile(join(dir, 'skill.json'), JSON.stringify({
+      name: '@test/skills',
+      skills: [{ name: 'foo', description: 'test' }],
+    }));
+    await expect(loadManifest(dir)).rejects.toThrow('path');
+  });
 });

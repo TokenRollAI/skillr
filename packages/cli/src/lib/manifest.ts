@@ -13,7 +13,12 @@ export async function loadManifest(dir: string): Promise<SkillManifest | null> {
     return null;
   }
 
-  const manifest: SkillManifest = JSON.parse(content);
+  let manifest: SkillManifest;
+  try {
+    manifest = JSON.parse(content);
+  } catch {
+    throw new Error('skill.json: invalid JSON format');
+  }
 
   if (!manifest.name) {
     throw new Error('skill.json: "name" is required');

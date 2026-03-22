@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
 
   useEffect(() => {
     if (token) {

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { eq, and } from 'drizzle-orm';
-import { requireAuth } from '../middleware/auth.js';
-import { requireNsRole } from '../middleware/auth.js';
+import type { AppEnv } from '../env.js';
+import { requireAuth, requireNsRole } from '../middleware/auth.js';
 import * as skillService from '../services/skill.service.js';
 import { getDb } from '../db.js';
 import { namespaces, nsMembers } from '../models/schema.js';
@@ -15,7 +15,7 @@ async function sha256(data: Uint8Array | ArrayBuffer): Promise<string> {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const skillsRoutes = new Hono();
+export const skillsRoutes = new Hono<AppEnv>();
 
 // R2 download proxy — serves artifact directly from R2
 skillsRoutes.get('/download/:key{.+}', async (c) => {
@@ -38,7 +38,7 @@ skillsRoutes.post('/:ns/:name', requireAuth, async (c) => {
   const ns = c.req.param('ns');
   const name = c.req.param('name');
   const tag = c.req.query('tag') || 'latest';
-  const user = c.get('user' as never) as { sub: string; role: string };
+  const user = c.get('user');
 
   if (user.role !== 'admin') {
     const db = getDb();
@@ -204,15 +204,7 @@ skillsRoutes.get('/:ns/:name/tags/:tag', async (c) => {
 
 // Search skills
 skillsRoutes.get('/', async (c) => {
-  let userId: string | undefined;
-  const authHeader = c.req.header('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    try {
-      const { verifyJwt } = await import('../utils/jwt.js');
-      const payload = await verifyJwt(authHeader.slice(7));
-      userId = payload.sub;
-    } catch {}
-  }
+  const userId = await extractOptionalUserId(c);
 
   const q = c.req.query('q') || '';
   const ns = c.req.query('namespace');
@@ -239,7 +231,7 @@ skillsRoutes.delete('/:ns/:name', requireAuth, requireNsRole('ns', 'maintainer')
   const deleted = await skillService.deleteSkill(ns, name);
   if (!deleted) return c.json({ error: 'Skill not found' }, 404);
   await logAuditEvent({
-    userId: (c.get('user' as never) as any).sub,
+    userId: c.get('user').sub,
     action: 'skill.delete',
     resource: `${ns}/${name}`,
   });

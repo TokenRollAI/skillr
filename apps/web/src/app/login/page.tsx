@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -31,8 +31,8 @@ export default function LoginPage() {
       }
 
       // Store token and user info
-      localStorage.setItem('skillhub_token', data.token);
-      localStorage.setItem('skillhub_user', JSON.stringify(data.user));
+      localStorage.setItem('skillr_token', data.token);
+      localStorage.setItem('skillr_user', JSON.stringify(data.user));
 
       // Notify NavBar about auth change
       window.dispatchEvent(new Event('skillhub:auth'));

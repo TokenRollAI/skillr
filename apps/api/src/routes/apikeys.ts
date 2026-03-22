@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import type { AppEnv } from '../env.js';
 import { requireAuth } from '../middleware/auth.js';
 import * as apikeyService from '../services/apikey.service.js';
 import { logAuditEvent } from '../services/audit.service.js';
 
-export const apikeyRoutes = new Hono();
+export const apikeyRoutes = new Hono<AppEnv>();
 
 const createSchema = z.object({
   name: z.string().min(1).max(128),
@@ -13,7 +14,7 @@ const createSchema = z.object({
 });
 
 apikeyRoutes.post('/', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const body = await c.req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 400);
@@ -36,13 +37,13 @@ apikeyRoutes.post('/', requireAuth, async (c) => {
 });
 
 apikeyRoutes.get('/', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const keys = await apikeyService.listApiKeys(user.sub);
   return c.json(keys);
 });
 
 apikeyRoutes.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const id = c.req.param('id');
   const key = await apikeyService.getApiKey(id, user.sub);
   if (!key) return c.json({ error: 'API Key not found' }, 404);
@@ -50,7 +51,7 @@ apikeyRoutes.get('/:id', requireAuth, async (c) => {
 });
 
 apikeyRoutes.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const id = c.req.param('id');
   const revoked = await apikeyService.revokeApiKey(id, user.sub);
   if (!revoked) return c.json({ error: 'API Key not found' }, 404);
@@ -65,7 +66,7 @@ apikeyRoutes.delete('/:id', requireAuth, async (c) => {
 });
 
 apikeyRoutes.post('/:id/rotate', requireAuth, async (c) => {
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
   const id = c.req.param('id');
   const result = await apikeyService.rotateApiKey(id, user.sub);
   if (!result) return c.json({ error: 'API Key not found' }, 404);

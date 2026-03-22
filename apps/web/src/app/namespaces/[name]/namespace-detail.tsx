@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 
 export default function NamespaceDetailPage() {

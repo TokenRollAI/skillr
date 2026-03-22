@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import CopyButton from '../../../../components/copy-button';
 import DeleteSkillButton from '../../../../components/delete-skill-button';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 
 export default function SkillDetailPage() {

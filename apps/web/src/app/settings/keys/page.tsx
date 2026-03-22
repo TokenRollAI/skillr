@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import CopyButton from '../../../components/copy-button';
 import ConfirmDialog from '../../../components/confirm-dialog';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 interface ApiKey { id: string; name: string; prefix: string; scopes: string[]; lastUsedAt: string | null; expiresAt: string | null; revoked: boolean; createdAt: string; }
 
@@ -18,7 +18,7 @@ export default function ApiKeysPage() {
   const [rotateTarget, setRotateTarget] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
   useEffect(() => { loadKeys(); }, []);

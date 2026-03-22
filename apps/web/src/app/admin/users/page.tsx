@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
   useEffect(() => { loadUsers(); }, []);

@@ -11,14 +11,14 @@ export default function NavBar() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('skillhub_user');
+    const stored = localStorage.getItem('skillr_user');
     if (stored) {
       try { setUser(JSON.parse(stored)); } catch {}
     }
 
     // Listen for storage changes (login/logout in other tabs)
     const handler = () => {
-      const s = localStorage.getItem('skillhub_user');
+      const s = localStorage.getItem('skillr_user');
       setUser(s ? JSON.parse(s) : null);
     };
     window.addEventListener('storage', handler);
@@ -31,8 +31,8 @@ export default function NavBar() {
   }, []);
 
   function handleLogout() {
-    localStorage.removeItem('skillhub_token');
-    localStorage.removeItem('skillhub_user');
+    localStorage.removeItem('skillr_token');
+    localStorage.removeItem('skillr_user');
     setUser(null);
     window.location.href = '/';
   }

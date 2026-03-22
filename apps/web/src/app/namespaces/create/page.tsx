@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function CreateNamespacePage() {
   const [name, setName] = useState('');
@@ -18,7 +18,7 @@ export default function CreateNamespacePage() {
     setLoading(true);
 
     const fullName = name.startsWith('@') ? name : `@${name}`;
-    const token = localStorage.getItem('skillhub_token');
+    const token = localStorage.getItem('skillr_token');
     if (!token) {
       setError('Please login first');
       setLoading(false);

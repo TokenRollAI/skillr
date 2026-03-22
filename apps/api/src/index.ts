@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import type { AppEnv } from './env.js';
-import { setEnvFromBindings } from './env.js';
+import { setEnvFromBindings, getFrontendUrl } from './env.js';
 import { initDb } from './db.js';
 import { setBucket } from './lib/storage.js';
 import { healthRoutes } from './routes/health.js';
@@ -24,7 +24,16 @@ app.use('*', async (c, next) => {
 });
 
 // Global middleware
-app.use('*', cors());
+app.use('*', cors({
+  origin: (origin) => {
+    const allowed = getFrontendUrl();
+    // Allow configured frontend, workers.dev preview, and no-origin (non-browser)
+    if (!origin) return allowed;
+    if (origin === allowed) return origin;
+    if (origin.endsWith('.workers.dev')) return origin;
+    return allowed;
+  },
+}));
 app.use('*', logger());
 
 // Error handler

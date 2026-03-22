@@ -1,10 +1,12 @@
 import { Hono } from 'hono';
+import { eq } from 'drizzle-orm';
 import { streamSSE } from 'hono/streaming';
+import type { AppEnv } from '../env.js';
 import * as skillService from '../services/skill.service.js';
 import { getDb } from '../db.js';
 import { namespaces } from '../models/schema.js';
 
-export const mcpRoutes = new Hono();
+export const mcpRoutes = new Hono<AppEnv>();
 
 // MCP tool definitions
 const TOOLS = [
@@ -82,7 +84,7 @@ async function handleToolCall(name: string, args: Record<string, any>): Promise<
     }
     case 'list_namespaces': {
       const db = getDb();
-      const nsList = await db.select().from(namespaces);
+      const nsList = await db.select().from(namespaces).where(eq(namespaces.visibility, 'public'));
       if (nsList.length === 0) return 'No namespaces found.';
       return nsList.map((ns: any) => `- **${ns.name}** (${ns.visibility}) - ${ns.description || ''}`).join('\n');
     }

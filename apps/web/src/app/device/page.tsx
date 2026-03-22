@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function DeviceCodePage() {
   const [userCode, setUserCode] = useState('');
@@ -11,7 +11,7 @@ export default function DeviceCodePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('skillhub_token');
+    const token = localStorage.getItem('skillr_token');
     if (!token) {
       setStatus('need-login');
     }
@@ -22,7 +22,7 @@ export default function DeviceCodePage() {
     setMessage('');
     setStatus('loading');
 
-    const token = localStorage.getItem('skillhub_token');
+    const token = localStorage.getItem('skillr_token');
     if (!token) {
       setStatus('need-login');
       return;

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [audit, setAudit] = useState<any[]>([]);
   const [error, setError] = useState('');
   const router = useRouter();
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   useEffect(() => {

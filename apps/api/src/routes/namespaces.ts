@@ -1,13 +1,12 @@
 import { Hono } from 'hono';
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth } from '../middleware/auth.js';
-import { requireNsRole } from '../middleware/auth.js';
+import type { AppEnv } from '../env.js';
+import { requireAuth, requireNsRole } from '../middleware/auth.js';
 import { getDb } from '../db.js';
-import { namespaces, nsMembers } from '../models/schema.js';
-import { users } from '../models/schema.js';
+import { namespaces, nsMembers, users } from '../models/schema.js';
 
-export const namespaceRoutes = new Hono();
+export const namespaceRoutes = new Hono<AppEnv>();
 
 const createSchema = z.object({
   name: z.string().min(2).max(64).regex(/^@[a-z0-9][a-z0-9-]*$/),
@@ -22,7 +21,7 @@ namespaceRoutes.post('/', requireAuth, async (c) => {
   if (!parsed.success) return c.json({ error: 'Validation failed', details: parsed.error.flatten() }, 400);
 
   const db = getDb();
-  const user = c.get('user' as never) as { sub: string };
+  const user = c.get('user');
 
   try {
     const now = new Date().toISOString();
@@ -190,7 +189,7 @@ namespaceRoutes.delete('/:name/members/:userId', requireAuth, requireNsRole('nam
   if (!ns) return c.json({ error: 'Namespace not found' }, 404);
 
   await db.delete(nsMembers).where(
-    eq(nsMembers.userId, userId)
+    and(eq(nsMembers.userId, userId), eq(nsMembers.namespaceId, ns.id))
   );
 
   return c.json({ success: true });

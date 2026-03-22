@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
+import type { AppEnv } from '../env.js';
 import { getDb } from '../db.js';
 import { checkR2Connection } from '../lib/storage.js';
 import { sql } from 'drizzle-orm';
 
-export const healthRoutes = new Hono();
+export const healthRoutes = new Hono<AppEnv>();
 
 healthRoutes.get('/', async (c) => {
   let dbStatus = 'disconnected';

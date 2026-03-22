@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { eq, desc, sql, and, gte, lte } from 'drizzle-orm';
+import type { AppEnv } from '../env.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getDb } from '../db.js';
 import { users, namespaces, skills, auditLogs } from '../models/schema.js';
 
-export const adminRoutes = new Hono();
+export const adminRoutes = new Hono<AppEnv>();
 
 adminRoutes.use('*', requireAuth, requireRole('admin'));
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -46,8 +46,8 @@ export default function RegisterPage() {
 
       if (loginRes.ok) {
         const data = await loginRes.json();
-        localStorage.setItem('skillhub_token', data.token);
-        localStorage.setItem('skillhub_user', JSON.stringify(data.user));
+        localStorage.setItem('skillr_token', data.token);
+        localStorage.setItem('skillr_user', JSON.stringify(data.user));
       }
 
       router.push('/');

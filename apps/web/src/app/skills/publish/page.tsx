@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api-url';
+import { apiUrl } from '@/lib/api';
 
 export default function PublishSkillPage() {
   const [namespaces, setNamespaces] = useState<any[]>([]);
@@ -29,7 +29,7 @@ Explain how to use this skill.
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('skillhub_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('skillr_token') : null;
 
   useEffect(() => {
     // Load available namespaces

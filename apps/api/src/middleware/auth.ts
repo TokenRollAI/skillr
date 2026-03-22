@@ -1,14 +1,11 @@
 import { createMiddleware } from 'hono/factory';
 import { eq, and } from 'drizzle-orm';
+import type { AppEnv } from '../env.js';
 import { verifyJwt, type JwtPayload } from '../utils/jwt.js';
 import { getDb } from '../db.js';
 import { namespaces, nsMembers } from '../models/schema.js';
 
-type Variables = {
-  user: JwtPayload;
-};
-
-export const requireAuth = createMiddleware<{ Variables: Variables }>(async (c, next) => {
+export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return c.json({ error: 'Authentication required' }, 401);
@@ -23,7 +20,7 @@ export const requireAuth = createMiddleware<{ Variables: Variables }>(async (c, 
     if (!payload) {
       return c.json({ error: 'Invalid or revoked API key' }, 401);
     }
-    c.set('user', payload as any);
+    c.set('user', payload as JwtPayload);
     await next();
     return;
   }
@@ -38,7 +35,7 @@ export const requireAuth = createMiddleware<{ Variables: Variables }>(async (c, 
   }
 });
 
-export const requireRole = (role: string) => createMiddleware<{ Variables: Variables }>(async (c, next) => {
+export const requireRole = (role: string) => createMiddleware<AppEnv>(async (c, next) => {
   const user = c.get('user');
   if (!user) {
     return c.json({ error: 'Authentication required' }, 401);
@@ -50,7 +47,7 @@ export const requireRole = (role: string) => createMiddleware<{ Variables: Varia
 });
 
 export const requireNsRole = (nsParamName: string, ...allowedRoles: string[]) =>
-  createMiddleware<{ Variables: Variables }>(async (c, next) => {
+  createMiddleware<AppEnv>(async (c, next) => {
     const user = c.get('user');
     if (!user) return c.json({ error: 'Authentication required' }, 401);
 
